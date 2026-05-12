@@ -9,8 +9,6 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/lib/auth";
-import { Toaster } from "sonner";
 
 function NotFoundComponent() {
   return (
@@ -74,12 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MediCare+ — Intelligent Medication Management" },
-      { name: "description", content: "Secure platform connecting patients, doctors, and pharmacists with smart reminders, digital prescriptions, and QR-based dispensing." },
-      { property: "og:title", content: "MediCare+ — Intelligent Medication Management" },
-      { property: "og:description", content: "Secure platform connecting patients, doctors, and pharmacists." },
+      { title: "Lovable App" },
+      { name: "description", content: "MediCare Connect is a full-stack web app for intelligent medication management, connecting patients, doctors, and pharmacists." },
+      { name: "author", content: "Lovable" },
+      { property: "og:title", content: "Lovable App" },
+      { property: "og:description", content: "MediCare Connect is a full-stack web app for intelligent medication management, connecting patients, doctors, and pharmacists." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:description", content: "MediCare Connect is a full-stack web app for intelligent medication management, connecting patients, doctors, and pharmacists." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8281612a-0447-40e4-a798-8fc90d62e789/id-preview-b780f40e--66f7c48f-fbb5-4785-883c-39cbf17b0fba.lovable.app-1778560570444.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8281612a-0447-40e4-a798-8fc90d62e789/id-preview-b780f40e--66f7c48f-fbb5-4785-883c-39cbf17b0fba.lovable.app-1778560570444.png" },
     ],
     links: [
       {
@@ -113,10 +117,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster theme="dark" position="top-right" richColors />
-      </AuthProvider>
+      <Outlet />
     </QueryClientProvider>
   );
 }
