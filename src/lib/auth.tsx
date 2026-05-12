@@ -15,6 +15,24 @@ export interface Profile {
   avatar_url: string | null;
 }
 
+export function getAuthErrorMessage(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? "";
+
+  if (error?.code === "weak_password" || message.includes("weak") || message.includes("easy to guess") || message.includes("pwned")) {
+    return "Choose a stronger password. Avoid common or leaked passwords and use a unique mix of letters, numbers, and symbols.";
+  }
+
+  if (message.includes("email not confirmed")) {
+    return "Your account exists, but your email still needs to be verified before you can sign in.";
+  }
+
+  if (message.includes("invalid login credentials")) {
+    return "That email or password is incorrect.";
+  }
+
+  return error?.message ?? "Something went wrong";
+}
+
 interface AuthCtx {
   user: User | null;
   session: Session | null;

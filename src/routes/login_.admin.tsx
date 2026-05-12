@@ -6,6 +6,7 @@ import { Field } from "@/routes/login";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ShieldAlert } from "lucide-react";
+import { getAuthErrorMessage } from "@/lib/auth";
 
 export const Route = createFileRoute("/login_/admin")({
   component: AdminAuth,
@@ -16,20 +17,6 @@ export const Route = createFileRoute("/login_/admin")({
 // Share this only with trusted operators; change it in source to rotate.
 const ADMIN_INVITE_CODE = "MEDICARE-ADMIN-2026";
 
-function getAuthErrorMessage(error: { message?: string; code?: string } | null | undefined) {
-  const message = error?.message?.toLowerCase() ?? "";
-
-  if (error?.code === "weak_password" || message.includes("weak") || message.includes("easy to guess") || message.includes("pwned")) {
-    return "Choose a stronger password. Avoid common or leaked passwords and use a unique mix of letters, numbers, and symbols.";
-  }
-
-  if (message.includes("email not confirmed")) {
-    return "Your account was created, but your email still needs to be verified before you can sign in.";
-  }
-
-  return error?.message ?? "Something went wrong";
-}
-
 function AdminAuth() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -38,9 +25,11 @@ function AdminAuth() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formMessage, setFormMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     setLoading(true);
     try {
       if (mode === "signin") {
@@ -53,6 +42,7 @@ function AdminAuth() {
           await supabase.auth.signOut();
           throw new Error("This account is not an administrator.");
         }
+        setFormMessage({ type: "success", text: "Signed in successfully." });
         nav({ to: "/admin" });
       } else {
         if (code !== ADMIN_INVITE_CODE) throw new Error("Invalid admin invite code.");
@@ -76,16 +66,20 @@ function AdminAuth() {
         }
 
         if (signUpData.session) {
+          setFormMessage({ type: "success", text: "Admin account created successfully." });
           toast.success("Admin account created ✓");
           nav({ to: "/admin" });
           return;
         }
 
+        setFormMessage({ type: "success", text: "Admin account created. Please verify your email, then sign in." });
         toast.success("Admin account created. Please verify your email, then sign in.");
         setMode("signin");
       }
     } catch (err: any) {
-      toast.error(getAuthErrorMessage(err));
+      const message = getAuthErrorMessage(err);
+      setFormMessage({ type: "error", text: message });
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -139,6 +133,15 @@ function AdminAuth() {
           >
             {loading ? "Please wait…" : mode === "signin" ? "Sign in as admin" : "Create admin account"}
           </button>
+          {formMessage && (
+            <p className={`rounded-xl border px-4 py-3 text-sm ${
+              formMessage.type === "error"
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : "border-primary/30 bg-primary/10 text-primary-glow"
+            }`}>
+              {formMessage.text}
+            </p>
+          )}
         </form>
 
         <p className="text-sm text-muted-foreground text-center mt-6">
