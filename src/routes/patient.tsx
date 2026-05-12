@@ -8,6 +8,7 @@ import { useAuth, useRequireRole } from "@/lib/auth";
 import { MED_CATALOG, PILL_COLORS } from "@/lib/medications";
 import { PillIcon } from "@/components/medi/PillIcon";
 import { DoseReminder } from "@/components/medi/DoseReminder";
+import { DailyHealthTip } from "@/components/medi/DailyHealthTip";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -83,6 +84,9 @@ function PatientDashboard() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-3">
+            <DailyHealthTip />
+          </div>
           <Panel title="Today's medicine" subtitle="Big names + colors so it's easy to see" action={<button onClick={() => setAdding(true)} className="flex items-center gap-1 text-xs bg-gradient-primary text-primary-foreground px-3 py-1.5 rounded-full shadow-glow"><Plus className="w-3 h-3" /> Add</button>} className="lg:col-span-2">
             {adding && <AddMedForm patientId={profile.id} onClose={() => { setAdding(false); load(); }} />}
             {meds.length === 0 && !adding && (
