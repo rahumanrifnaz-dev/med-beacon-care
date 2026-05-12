@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "MediSync — Intelligent Medication Management" },
+      { title: "MediCare+ — Intelligent Medication Management" },
       { name: "description", content: "A secure platform connecting patients, doctors, and pharmacists with smart reminders, digital prescriptions, and adherence analytics." },
     ],
   }),
@@ -63,7 +63,7 @@ function Landing() {
             <span className="text-gradient">care, in sync.</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-            MediSync connects patients, doctors, and pharmacists in one secure platform —
+            MediCare+ connects patients, doctors, and pharmacists in one secure platform —
             with smart reminders, digital prescriptions, and AI-driven adherence insights.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -74,10 +74,10 @@ function Landing() {
               Start free trial
             </Link>
             <Link
-              to="/patient"
+              to="/login"
               className="glass px-6 py-3 rounded-xl font-medium hover:bg-secondary/40 transition-colors"
             >
-              View live demo
+              Sign in
             </Link>
           </div>
         </motion.div>
@@ -134,7 +134,7 @@ function Landing() {
 
       <footer className="border-t border-border/40 px-6 lg:px-12 py-8 flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
         <Logo />
-        <p>© 2026 MediSync · Secure healthcare coordination</p>
+        <p>© 2026 MediCare+ · Secure healthcare coordination</p>
       </footer>
     </div>
   );
