@@ -19,7 +19,7 @@ import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
-import { Route as LoginAdminRouteImport } from './routes/login.admin'
+import { Route as LoginAdminRouteImport } from './routes/login_.admin'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -72,9 +72,9 @@ const PharmacyScanRoute = PharmacyScanRouteImport.update({
   getParentRoute: () => PharmacyRoute,
 } as any)
 const LoginAdminRoute = LoginAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => LoginRoute,
+  id: '/login_/admin',
+  path: '/login/admin',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -82,7 +82,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRouteWithChildren
+  '/login': typeof LoginRoute
   '/patient': typeof PatientRoute
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -95,7 +95,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRouteWithChildren
+  '/login': typeof LoginRoute
   '/patient': typeof PatientRoute
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -109,12 +109,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRouteWithChildren
+  '/login': typeof LoginRoute
   '/patient': typeof PatientRoute
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/login/admin': typeof LoginAdminRoute
+  '/login_/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRouteTypes {
@@ -155,7 +155,7 @@ export interface FileRouteTypes {
     | '/pharmacy'
     | '/reset-password'
     | '/signup'
-    | '/login/admin'
+    | '/login_/admin'
     | '/pharmacy/scan'
   fileRoutesById: FileRoutesById
 }
@@ -164,11 +164,12 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   DoctorRoute: typeof DoctorRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LoginRoute: typeof LoginRouteWithChildren
+  LoginRoute: typeof LoginRoute
   PatientRoute: typeof PatientRoute
   PharmacyRoute: typeof PharmacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  LoginAdminRoute: typeof LoginAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -243,25 +244,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PharmacyScanRouteImport
       parentRoute: typeof PharmacyRoute
     }
-    '/login/admin': {
-      id: '/login/admin'
-      path: '/admin'
+    '/login_/admin': {
+      id: '/login_/admin'
+      path: '/login/admin'
       fullPath: '/login/admin'
       preLoaderRoute: typeof LoginAdminRouteImport
-      parentRoute: typeof LoginRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface LoginRouteChildren {
-  LoginAdminRoute: typeof LoginAdminRoute
-}
-
-const LoginRouteChildren: LoginRouteChildren = {
-  LoginAdminRoute: LoginAdminRoute,
-}
-
-const LoginRouteWithChildren = LoginRoute._addFileChildren(LoginRouteChildren)
 
 interface PharmacyRouteChildren {
   PharmacyScanRoute: typeof PharmacyScanRoute
@@ -280,11 +271,12 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   DoctorRoute: DoctorRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  LoginRoute: LoginRouteWithChildren,
+  LoginRoute: LoginRoute,
   PatientRoute: PatientRoute,
   PharmacyRoute: PharmacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  LoginAdminRoute: LoginAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
