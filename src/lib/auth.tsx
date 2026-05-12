@@ -50,8 +50,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (uid: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+  const loadProfile = async (uid: string, attempt = 0) => {
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+
+    if (error) {
+      const message = error.message?.toLowerCase() ?? "";
+      const shouldRetry = error.code === "403" || message.includes("forbidden") || message.includes("row-level security");
+
+      if (shouldRetry && attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+        return loadProfile(uid, attempt + 1);
+      }
+
+      if (!shouldRetry) {
+        console.error(error);
+      }
+
+      setProfile(null);
+      return;
+    }
+
     setProfile((data as Profile) ?? null);
   };
 
@@ -59,13 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) setTimeout(() => loadProfile(s.user.id), 0);
+      if (s?.user) setTimeout(() => void loadProfile(s.user.id), 0);
       else setProfile(null);
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      if (data.session?.user) loadProfile(data.session.user.id).finally(() => setLoading(false));
+      if (data.session?.user) void loadProfile(data.session.user.id).finally(() => setLoading(false));
       else setLoading(false);
     });
     return () => sub.subscription.unsubscribe();

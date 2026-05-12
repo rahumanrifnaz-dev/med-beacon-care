@@ -28,6 +28,7 @@ function DoctorDashboard() {
   const [meds, setMeds] = useState<any[]>([]);
   const [rxs, setRxs] = useState<any[]>([]);
   const [newRx, setNewRx] = useState<{ med: string; dose: string; freq: string }[]>([]);
+  const [pharmacyMeds, setPharmacyMeds] = useState<any[]>([]);
 
   const loadPatients = async () => {
     if (!profile) return;
@@ -42,6 +43,13 @@ function DoctorDashboard() {
     setRxs(r ?? []);
   };
   useEffect(() => { loadPatients(); /* eslint-disable-next-line */ }, [profile?.id]);
+
+  const loadCatalog = async () => {
+    // Load all pharmacy medicines regardless of availability status
+    const { data } = await supabase.from('pharmacy_medicines').select('*').order('created_at', { ascending: false });
+    setPharmacyMeds(data ?? []);
+  };
+  useEffect(() => { loadCatalog(); /* eslint-disable-next-line */ }, []);
 
   const markTaken = async (med: any) => {
     if (!selected) return;
@@ -68,6 +76,24 @@ function DoctorDashboard() {
     });
     toast.success("Prescription issued");
     setNewRx([]); loadPatient(selected);
+  };
+
+  const deleteRx = async (id: string) => {
+    if (!selected) return;
+    // Confirm destructive action
+    if (!confirm("Delete this prescription? This cannot be undone.")) return;
+    const { error } = await supabase.from("prescriptions").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    // notify patient
+    await supabase.from("notifications").insert({
+      user_id: selected.id, type: "rx_deleted", title: "Prescription removed by your doctor",
+      body: `A prescription was removed by ${profile?.full_name ?? 'your doctor'}.`,
+    });
+    toast.success("Prescription deleted");
+    loadPatient(selected);
   };
 
   if (!profile) return null;
@@ -124,7 +150,7 @@ function DoctorDashboard() {
                 <button onClick={() => setNewRx(newRx.filter((_, j) => j !== i))} className="text-xs text-muted-foreground hover:text-foreground">Remove</button>
               </div>
             ))}
-            <RxItemForm onAdd={(it) => setNewRx([...newRx, it])} />
+            <RxItemForm onAdd={(it) => setNewRx([...newRx, it])} extraMeds={pharmacyMeds} />
             <button onClick={issueRx} disabled={newRx.length === 0} className="bg-gradient-primary text-primary-foreground px-4 py-2 rounded-xl shadow-glow text-sm font-medium disabled:opacity-50">Issue prescription</button>
           </div>
           {rxs.length > 0 && (
@@ -133,6 +159,9 @@ function DoctorDashboard() {
                 <div key={r.id} className="p-3 rounded-xl bg-secondary/30 text-center">
                   <div className="bg-white p-2 rounded-lg inline-block"><QRCodeSVG value={r.qr_token} size={90} /></div>
                   <p className="text-xs mt-2 capitalize">{r.status}</p>
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <button onClick={() => deleteRx(r.id)} className="text-xs px-3 py-1.5 rounded-full bg-secondary/60 hover:bg-secondary">Delete</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -143,14 +172,18 @@ function DoctorDashboard() {
   );
 }
 
-function RxItemForm({ onAdd }: { onAdd: (it: { med: string; dose: string; freq: string }) => void }) {
-  const [med, setMed] = useState(MED_CATALOG[0].brand);
+function RxItemForm({ onAdd, extraMeds }: { onAdd: (it: { med: string; dose: string; freq: string }) => void; extraMeds?: any[] }) {
+  const options = [
+    ...MED_CATALOG.map((c) => ({ value: c.brand, label: `${c.common} (${c.brand})` })),
+    ...(extraMeds ?? []).map((m: any) => ({ value: `${m.name} · ${m.dosage}`, label: `${m.name} (${m.dosage})` })),
+  ];
+  const [med, setMed] = useState(options[0]?.value ?? MED_CATALOG[0].brand);
   const [dose, setDose] = useState("1 tablet");
   const [freq, setFreq] = useState("Once daily");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
       <select value={med} onChange={(e) => setMed(e.target.value)} className="bg-input/60 border border-border/60 rounded-xl px-3 py-2 text-sm sm:col-span-2">
-        {MED_CATALOG.map((c) => <option key={c.brand} value={c.brand}>{c.common} ({c.brand})</option>)}
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
       <input value={dose} onChange={(e) => setDose(e.target.value)} placeholder="Dose" className="bg-input/60 border border-border/60 rounded-xl px-3 py-2 text-sm" />
       <div className="flex gap-2">

@@ -17,6 +17,45 @@ export const Route = createFileRoute("/login_/admin")({
 // Share this only with trusted operators; change it in source to rotate.
 const ADMIN_INVITE_CODE = "MEDICARE-ADMIN-2026";
 
+async function ensureAdminRecords(userId: string, fullName: string) {
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+
+  if (!profile) {
+    const { error: insertProfileError } = await supabase.from("profiles").insert({
+      id: userId,
+      full_name: fullName,
+      role: "admin",
+      verification_status: "approved",
+    });
+
+    if (insertProfileError) throw insertProfileError;
+  }
+
+  const { data: adminRole, error: roleError } = await supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (roleError) throw roleError;
+
+  if (!adminRole) {
+    const { error: insertRoleError } = await supabase.from("user_roles").insert({
+      user_id: userId,
+      role: "admin",
+    });
+
+    if (insertRoleError) throw insertRoleError;
+  }
+}
+
 function AdminAuth() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -36,8 +75,12 @@ function AdminAuth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         const { data: u } = await supabase.auth.getUser();
+        const signedInUser = u.user!;
+        if (signedInUser.user_metadata?.role === "admin") {
+          await ensureAdminRecords(signedInUser.id, signedInUser.user_metadata?.full_name ?? fullName ?? email.split("@")[0]);
+        }
         const { data: profile } = await supabase
-          .from("profiles").select("role").eq("id", u.user!.id).maybeSingle();
+          .from("profiles").select("role").eq("id", signedInUser.id).maybeSingle();
         if (profile?.role !== "admin") {
           await supabase.auth.signOut();
           throw new Error("This account is not an administrator.");
@@ -66,6 +109,7 @@ function AdminAuth() {
         }
 
         if (signUpData.session) {
+          await ensureAdminRecords(signUpData.session.user.id, fullName || email.split("@")[0]);
           setFormMessage({ type: "success", text: "Admin account created successfully." });
           toast.success("Admin account created ✓");
           nav({ to: "/admin" });

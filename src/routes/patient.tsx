@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useRequireRole } from "@/lib/auth";
-import { MED_CATALOG, PILL_COLORS } from "@/lib/medications";
+import { MED_CATALOG } from "@/lib/medications";
 import { PillIcon } from "@/components/medi/PillIcon";
 import { DoseReminder } from "@/components/medi/DoseReminder";
 import { DailyHealthTip } from "@/components/medi/DailyHealthTip";
@@ -36,17 +36,95 @@ interface Med {
 }
 interface Rx { id: string; qr_token: string; items: any; status: string; created_at: string }
 
+interface EnrichedRx extends Rx {
+  patient?: { full_name?: string | null } | null;
+  medicineDetails?: Array<{
+    med: string;
+    dose: string;
+    freq: string;
+    color: string;
+    image_url: string | null;
+    available: boolean;
+    pharmacist_name: string | null;
+  }>;
+}
+
 function PatientDashboard() {
   const { profile, refreshProfile } = useAuth();
   useRequireRole("patient");
   const [meds, setMeds] = useState<Med[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
-  const [rxs, setRxs] = useState<Rx[]>([]);
-  const [adding, setAdding] = useState(false);
+  const [rxs, setRxs] = useState<EnrichedRx[]>([]);
+  const [pharmacyMeds, setPharmacyMeds] = useState<any[]>([]);
+
+  const loadPharmacyCatalog = async () => {
+    const { data } = await supabase.from("pharmacy_medicines").select("*");
+    setPharmacyMeds(data ?? []);
+    return data ?? [];
+  };
+
+  const loadPharmacyAvailability = async () => {
+    const { data } = await supabase.from("pharmacy_availability").select("pharmacist_id, medicines");
+    return data ?? [];
+  };
+
+  const loadPharmacists = async (pharmacistIds: string[]) => {
+    if (pharmacistIds.length === 0) return [];
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", pharmacistIds);
+    return data ?? [];
+  };
+
+  const enrichPrescriptions = async (prescriptions: any[], catalog: any[], availabilityRows: any[], pharmacists: any[]) => {
+    const medsMap = new Map<string, any>();
+    catalog.forEach((m: any) => {
+      medsMap.set(m.name.trim().toLowerCase(), m);
+      const label = [m.name, m.dosage].filter(Boolean).join(" · ").trim().toLowerCase();
+      if (label) medsMap.set(label, m);
+    });
+
+    const pharmacistMap = new Map(pharmacists.map((p: any) => [p.id, p.full_name ?? "Pharmacist"]));
+    const availabilityMap = new Map<string, string[]>();
+
+    availabilityRows.forEach((row: any) => {
+      const pharmacistName = pharmacistMap.get(row.pharmacist_id) ?? "Pharmacist";
+      (row.medicines as string[] | undefined ?? []).forEach((medicineId) => {
+        const list = availabilityMap.get(medicineId) ?? [];
+        list.push(pharmacistName);
+        availabilityMap.set(medicineId, list);
+      });
+    });
+
+    return prescriptions.map((rx) => ({
+      ...rx,
+      medicineDetails: (rx.items as any[] ?? []).map((item: any) => {
+        const medKey = String(item.med ?? "").trim().toLowerCase();
+        const match = medsMap.get(medKey) ?? medsMap.get(medKey.split(" · ")[0] ?? "");
+        const pharmacistsAvailable = match?.id ? Array.from(new Set(availabilityMap.get(match.id) ?? [])) : [];
+        return {
+          med: item.med,
+          dose: item.dose,
+          freq: item.freq,
+          color: match?.color ?? "#a78bfa",
+          image_url: match?.image_url ?? null,
+          available: pharmacistsAvailable.length > 0,
+          pharmacist_name: pharmacistsAvailable.length > 0 ? pharmacistsAvailable.join(", ") : null,
+        };
+      }),
+    }));
+  };
 
   const load = async () => {
     if (!profile) return;
+    const [catalog, availabilityRows] = await Promise.all([
+      loadPharmacyCatalog(),
+      loadPharmacyAvailability(),
+    ]);
+    const pharmacistIds = Array.from(new Set(availabilityRows.map((row: any) => row.pharmacist_id).filter(Boolean)));
+    const pharmacists = await loadPharmacists(pharmacistIds);
     const { data: m } = await supabase.from("medications").select("*").eq("patient_id", profile.id).eq("active", true);
     setMeds((m as any) ?? []);
     const today = new Date().toISOString().slice(0, 10);
@@ -55,7 +133,7 @@ function PatientDashboard() {
     const { data: d } = await supabase.from("profiles").select("id, full_name").eq("role", "doctor").eq("verification_status", "approved");
     setDoctors(d ?? []);
     const { data: r } = await supabase.from("prescriptions").select("*").eq("patient_id", profile.id).order("created_at", { ascending: false });
-    setRxs((r as any) ?? []);
+    setRxs(await enrichPrescriptions((r as any) ?? [], catalog, availabilityRows, pharmacists));
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [profile?.id]);
 
@@ -87,9 +165,8 @@ function PatientDashboard() {
           <div className="lg:col-span-3">
             <DailyHealthTip />
           </div>
-          <Panel title="Today's medicine" subtitle="Big names + colors so it's easy to see" action={<button onClick={() => setAdding(true)} className="flex items-center gap-1 text-xs bg-gradient-primary text-primary-foreground px-3 py-1.5 rounded-full shadow-glow"><Plus className="w-3 h-3" /> Add</button>} className="lg:col-span-2">
-            {adding && <AddMedForm patientId={profile.id} onClose={() => { setAdding(false); load(); }} />}
-            {meds.length === 0 && !adding && (
+          <Panel title="Today's medicine" subtitle="Big names + colors so it's easy to see" className="lg:col-span-2">
+            {meds.length === 0 && (
               <p className="text-sm text-muted-foreground py-6 text-center">No medicines yet — tap Add to start.</p>
             )}
             <div className="space-y-2 mt-2">
@@ -141,13 +218,37 @@ function PatientDashboard() {
           {rxs.length === 0 ? (
             <p className="text-sm text-muted-foreground">No prescriptions yet.</p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-4">
               {rxs.map((r) => (
-                <div key={r.id} className="p-4 rounded-xl bg-secondary/30 flex flex-col items-center text-center">
-                  <div className="bg-white p-3 rounded-xl"><QRCodeSVG value={r.qr_token} size={120} /></div>
-                  <p className="text-xs text-muted-foreground mt-3">Status</p>
-                  <p className="font-semibold capitalize">{r.status}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString()}</p>
+                <div key={r.id} className="p-4 rounded-xl bg-secondary/30">
+                  <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="bg-white p-3 rounded-xl self-start"><QRCodeSVG value={r.qr_token} size={120} /></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Status</p>
+                          <p className="font-semibold capitalize">{r.status}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        {(r.medicineDetails ?? []).map((item, index) => (
+                          <div key={`${r.id}-${index}`} className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/60">
+                            <div className="w-12 h-12 rounded-lg shrink-0 flex items-center justify-center overflow-hidden" style={{ backgroundColor: item.color }}>
+                              {item.image_url ? <img src={item.image_url} alt={item.med} className="w-full h-full object-cover" /> : <span className="text-white/70 text-xs font-bold">💊</span>}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{item.med}</p>
+                              <p className="text-xs text-muted-foreground">{item.dose} · {item.freq}</p>
+                            </div>
+                            <span className={`text-xs px-2.5 py-1 rounded-full ${item.available ? "bg-success/20 text-success" : "bg-secondary/80 text-muted-foreground"}`}>
+                              {item.available ? `Available: ${item.pharmacist_name}` : "Not available anywhere"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -155,50 +256,5 @@ function PatientDashboard() {
         </Panel>
       </DashboardShell>
     </>
-  );
-}
-
-function AddMedForm({ patientId, onClose }: { patientId: string; onClose: () => void }) {
-  const [preset, setPreset] = useState(MED_CATALOG[0]);
-  const [color, setColor] = useState(preset.color);
-  const [time, setTime] = useState("08:00");
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("medications").insert({
-      patient_id: patientId, common_name: preset.common, brand_name: preset.brand,
-      color, shape: preset.shape, dose: preset.brand, schedule_times: [time],
-    });
-    if (error) toast.error(error.message); else { toast.success("Added"); onClose(); }
-  };
-  return (
-    <form onSubmit={submit} className="p-4 rounded-xl bg-primary/5 border border-primary/30 space-y-3 mb-3">
-      <div>
-        <label className="text-xs uppercase tracking-widest text-muted-foreground">Pick medicine</label>
-        <select value={preset.brand} onChange={(e) => { const p = MED_CATALOG.find(c => c.brand === e.target.value)!; setPreset(p); setColor(p.color); }}
-          className="mt-1 w-full bg-input/60 border border-border/60 rounded-xl px-3 py-2.5 text-sm">
-          {MED_CATALOG.map((c) => <option key={c.brand} value={c.brand}>{c.common} ({c.brand})</option>)}
-        </select>
-      </div>
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="text-xs uppercase tracking-widest text-muted-foreground">Time</label>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="mt-1 w-full bg-input/60 border border-border/60 rounded-xl px-3 py-2.5 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs uppercase tracking-widest text-muted-foreground">Color</label>
-          <div className="mt-1 flex gap-1.5">
-            {PILL_COLORS.map((c) => (
-              <button key={c.value} type="button" onClick={() => setColor(c.value)}
-                style={{ background: c.value }}
-                className={`w-7 h-7 rounded-full ring-2 ${color === c.value ? "ring-primary" : "ring-white/20"}`} title={c.label} />
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button type="submit" className="flex-1 bg-gradient-primary text-primary-foreground py-2 rounded-xl text-sm font-medium shadow-glow">Add medicine</button>
-        <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-secondary/60 text-sm">Cancel</button>
-      </div>
-    </form>
   );
 }

@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
-import { Bell, LogOut, Settings, type LucideIcon } from "lucide-react";
+import { Bell, LogOut, Settings, Menu, X, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useState } from "react";
 
 export interface NavItem {
   label: string;
@@ -25,6 +26,7 @@ export function DashboardShell({
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="min-h-screen flex">
       <aside className="hidden lg:flex w-64 flex-col border-r border-border/40 glass">
@@ -32,12 +34,12 @@ export function DashboardShell({
           <Logo />
         </div>
         <nav className="flex-1 px-3 space-y-1">
-          {nav.map((item) => {
+          {nav.map((item, i) => {
             const active = location.pathname === item.to;
             const Icon = item.icon;
             return (
               <Link
-                key={item.to}
+                key={`${item.to}-${item.label}-${i}`}
                 to={item.to}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
@@ -61,12 +63,19 @@ export function DashboardShell({
         </div>
       </aside>
       <main className="flex-1 min-w-0">
-        <header className="sticky top-0 z-10 glass border-b border-border/40 px-6 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-10 glass border-b border-border/40 px-4 py-3 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground">{role}</p>
             <h1 className="font-display text-lg font-semibold">Welcome back, {name}</h1>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              className="p-2 rounded-xl hover:bg-secondary/60 transition-colors lg:hidden"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <button className="p-2 rounded-xl hover:bg-secondary/60 transition-colors relative">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
@@ -79,6 +88,49 @@ export function DashboardShell({
             </div>
           </div>
         </header>
+        {/* Mobile nav overlay */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+            <aside className="absolute left-0 top-0 bottom-0 w-64 bg-background/80 glass p-4 border-r border-border/40">
+              <div className="flex items-center justify-between mb-4">
+                <Logo />
+                <button onClick={() => setMobileOpen(false)} aria-label="Close navigation" className="p-2 rounded-lg hover:bg-secondary/40">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <nav className="space-y-2">
+                {nav.map((item, i) => {
+                  const active = location.pathname === item.to;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={`${item.to}-${item.label}-mobile-${i}`}
+                      to={item.to}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        active
+                          ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="mt-6">
+                <button
+                  onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" /> Sign out
+                </button>
+              </div>
+            </aside>
+          </div>
+        )}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
