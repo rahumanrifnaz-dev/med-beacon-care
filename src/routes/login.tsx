@@ -2,75 +2,60 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Logo } from "@/components/medi/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { dashboardFor } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   component: Login,
-  head: () => ({ meta: [{ title: "Sign in · MediSync" }] }),
+  head: () => ({ meta: [{ title: "Sign in · MediCare+" }] }),
 });
 
 function Login() {
   const nav = useNavigate();
-  const [role, setRole] = useState<"patient" | "doctor" | "pharmacy">("patient");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", u.user.id).maybeSingle();
+        nav({ to: dashboardFor(profile?.role as any) });
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? "Sign-in failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md glass rounded-3xl p-8 shadow-elegant"
-      >
-        <div className="flex justify-center mb-6">
-          <Logo />
-        </div>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md glass rounded-3xl p-8 shadow-elegant">
+        <div className="flex justify-center mb-6"><Logo /></div>
         <h1 className="font-display text-2xl font-bold text-center">Welcome back</h1>
-        <p className="text-sm text-muted-foreground text-center mt-1">
-          Sign in to your MediSync account
-        </p>
+        <p className="text-sm text-muted-foreground text-center mt-1">Sign in to your MediCare+ account</p>
 
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-secondary/40 mt-6">
-          {(["patient", "doctor", "pharmacy"] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`text-xs font-medium py-2 rounded-lg capitalize transition-all ${
-                role === r ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            nav({ to: role === "patient" ? "/patient" : role === "doctor" ? "/doctor" : "/pharmacy" });
-          }}
-          className="space-y-3 mt-6"
-        >
-          <Field label="Email" type="email" placeholder="you@clinic.health" />
-          <Field label="Password" type="password" placeholder="••••••••" />
+        <form onSubmit={handleSubmit} className="space-y-3 mt-6">
+          <Field label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@clinic.health" required />
+          <Field label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
           <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-muted-foreground">
-              <input type="checkbox" className="rounded" /> Remember me
-            </label>
-            <Link to="/forgot-password" className="text-primary-glow hover:underline">
-              Forgot password?
-            </Link>
+            <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="rounded" /> Remember me</label>
+            <Link to="/forgot-password" className="text-primary-glow hover:underline">Forgot password?</Link>
           </div>
-          <button
-            type="submit"
-            className="w-full bg-gradient-primary text-primary-foreground font-medium py-3 rounded-xl shadow-glow hover:shadow-elegant transition-all"
-          >
-            Sign in
+          <button type="submit" disabled={loading} className="w-full bg-gradient-primary text-primary-foreground font-medium py-3 rounded-xl shadow-glow hover:shadow-elegant transition-all disabled:opacity-50">
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
         <p className="text-sm text-muted-foreground text-center mt-6">
-          New to MediSync?{" "}
-          <Link to="/signup" className="text-primary-glow hover:underline">
-            Create account
-          </Link>
+          New to MediCare+? <Link to="/signup" className="text-primary-glow hover:underline">Create account</Link>
         </p>
       </motion.div>
     </div>
