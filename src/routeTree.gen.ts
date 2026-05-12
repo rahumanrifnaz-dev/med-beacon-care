@@ -11,10 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PharmacyRouteImport } from './routes/pharmacy'
 import { Route as PatientRouteImport } from './routes/patient'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -24,6 +27,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PharmacyRoute = PharmacyRouteImport.update({
+  id: '/pharmacy',
+  path: '/pharmacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PatientRoute = PatientRouteImport.update({
@@ -41,69 +49,99 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DoctorRoute = DoctorRouteImport.update({
+  id: '/doctor',
+  path: '/doctor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PharmacyScanRoute = PharmacyScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => PharmacyRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/patient': typeof PatientRoute
+  '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/patient': typeof PatientRoute
+  '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/patient': typeof PatientRoute
+  '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/doctor'
     | '/forgot-password'
     | '/login'
     | '/patient'
+    | '/pharmacy'
     | '/reset-password'
     | '/signup'
+    | '/pharmacy/scan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/doctor'
     | '/forgot-password'
     | '/login'
     | '/patient'
+    | '/pharmacy'
     | '/reset-password'
     | '/signup'
+    | '/pharmacy/scan'
   id:
     | '__root__'
     | '/'
+    | '/doctor'
     | '/forgot-password'
     | '/login'
     | '/patient'
+    | '/pharmacy'
     | '/reset-password'
     | '/signup'
+    | '/pharmacy/scan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DoctorRoute: typeof DoctorRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PatientRoute: typeof PatientRoute
+  PharmacyRoute: typeof PharmacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
 }
@@ -122,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pharmacy': {
+      id: '/pharmacy'
+      path: '/pharmacy'
+      fullPath: '/pharmacy'
+      preLoaderRoute: typeof PharmacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/patient': {
@@ -145,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/doctor': {
+      id: '/doctor'
+      path: '/doctor'
+      fullPath: '/doctor'
+      preLoaderRoute: typeof DoctorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -152,14 +204,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pharmacy/scan': {
+      id: '/pharmacy/scan'
+      path: '/scan'
+      fullPath: '/pharmacy/scan'
+      preLoaderRoute: typeof PharmacyScanRouteImport
+      parentRoute: typeof PharmacyRoute
+    }
   }
 }
 
+interface PharmacyRouteChildren {
+  PharmacyScanRoute: typeof PharmacyScanRoute
+}
+
+const PharmacyRouteChildren: PharmacyRouteChildren = {
+  PharmacyScanRoute: PharmacyScanRoute,
+}
+
+const PharmacyRouteWithChildren = PharmacyRoute._addFileChildren(
+  PharmacyRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DoctorRoute: DoctorRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PatientRoute: PatientRoute,
+  PharmacyRoute: PharmacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
 }
