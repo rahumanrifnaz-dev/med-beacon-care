@@ -57,6 +57,9 @@ function Login() {
         <p className="text-sm text-muted-foreground text-center mt-6">
           New to MediCare+? <Link to="/signup" className="text-primary-glow hover:underline">Create account</Link>
         </p>
+        <p className="text-[11px] text-muted-foreground/60 text-center mt-3">
+          <Link to="/login/admin" className="hover:text-primary-glow transition-colors">Admin portal →</Link>
+        </p>
       </motion.div>
     </div>
   );
