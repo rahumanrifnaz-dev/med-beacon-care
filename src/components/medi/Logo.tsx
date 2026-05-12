@@ -1,4 +1,4 @@
-import { Pill } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export function Logo({ to = "/" }: { to?: string }) {
@@ -7,11 +7,11 @@ export function Logo({ to = "/" }: { to?: string }) {
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-primary blur-md opacity-60 group-hover:opacity-100 transition-opacity rounded-xl" />
         <div className="relative bg-gradient-primary p-2 rounded-xl shadow-glow">
-          <Pill className="w-5 h-5 text-primary-foreground" />
+          <HeartPulse className="w-5 h-5 text-primary-foreground" />
         </div>
       </div>
       <span className="font-display font-bold text-xl tracking-tight">
-        Medi<span className="text-gradient">Sync</span>
+        MediCare<span className="text-gradient">+</span>
       </span>
     </Link>
   );
