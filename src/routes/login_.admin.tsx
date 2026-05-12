@@ -6,6 +6,7 @@ import { Field } from "@/routes/login";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ShieldAlert } from "lucide-react";
+import { getAuthErrorMessage } from "@/lib/auth";
 
 export const Route = createFileRoute("/login_/admin")({
   component: AdminAuth,
@@ -24,9 +25,11 @@ function AdminAuth() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formMessage, setFormMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     setLoading(true);
     try {
       if (mode === "signin") {
@@ -39,11 +42,12 @@ function AdminAuth() {
           await supabase.auth.signOut();
           throw new Error("This account is not an administrator.");
         }
+        setFormMessage({ type: "success", text: "Signed in successfully." });
         nav({ to: "/admin" });
       } else {
         if (code !== ADMIN_INVITE_CODE) throw new Error("Invalid admin invite code.");
         if (password.length < 8) throw new Error("Password must be at least 8 characters.");
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -52,32 +56,30 @@ function AdminAuth() {
           },
         });
         if (signUpError) {
-          // If account already exists, try to sign in and promote to admin.
           const msg = signUpError.message?.toLowerCase() ?? "";
           const alreadyExists = msg.includes("already") || (signUpError as any).code === "user_already_exists";
-          if (!alreadyExists) throw signUpError;
+          if (alreadyExists) {
+            throw new Error("This email is already registered. Sign in with that account instead of creating it again.");
+          }
 
-          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInErr) throw new Error("This email is already registered. Enter the correct password to promote it to admin.");
+          throw signUpError;
+        }
 
-          const { data: u } = await supabase.auth.getUser();
-          const uid = u.user!.id;
-          const { error: pErr } = await supabase
-            .from("profiles")
-            .update({ role: "admin", verification_status: "approved", full_name: fullName || undefined })
-            .eq("id", uid);
-          if (pErr) throw pErr;
-          // Insert admin role (ignore duplicate-key)
-          await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-          toast.success("Account promoted to admin ✓");
+        if (signUpData.session) {
+          setFormMessage({ type: "success", text: "Admin account created successfully." });
+          toast.success("Admin account created ✓");
           nav({ to: "/admin" });
           return;
         }
-        toast.success("Admin account created. You can sign in now.");
+
+        setFormMessage({ type: "success", text: "Admin account created. Please verify your email, then sign in." });
+        toast.success("Admin account created. Please verify your email, then sign in.");
         setMode("signin");
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+      const message = getAuthErrorMessage(err);
+      setFormMessage({ type: "error", text: message });
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -131,6 +133,15 @@ function AdminAuth() {
           >
             {loading ? "Please wait…" : mode === "signin" ? "Sign in as admin" : "Create admin account"}
           </button>
+          {formMessage && (
+            <p className={`rounded-xl border px-4 py-3 text-sm ${
+              formMessage.type === "error"
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : "border-primary/30 bg-primary/10 text-primary-glow"
+            }`}>
+              {formMessage.text}
+            </p>
+          )}
         </form>
 
         <p className="text-sm text-muted-foreground text-center mt-6">

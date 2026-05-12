@@ -6,7 +6,7 @@ import { Field } from "@/routes/login";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, ShieldCheck } from "lucide-react";
-import { dashboardFor } from "@/lib/auth";
+import { dashboardFor, getAuthErrorMessage } from "@/lib/auth";
 
 export const Route = createFileRoute("/signup")({
   component: Signup,
@@ -58,7 +58,7 @@ function Signup() {
       );
       nav({ to: dashboardFor(role) });
     } catch (err: any) {
-      toast.error(err.message ?? "Sign-up failed");
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

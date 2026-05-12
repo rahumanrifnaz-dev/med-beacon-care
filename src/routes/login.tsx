@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Logo } from "@/components/medi/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { dashboardFor } from "@/lib/auth";
+import { dashboardFor, getAuthErrorMessage } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -29,7 +29,7 @@ function Login() {
         nav({ to: dashboardFor(profile?.role as any) });
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Sign-in failed");
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
