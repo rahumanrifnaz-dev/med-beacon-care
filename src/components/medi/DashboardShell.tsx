@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { Bell, LogOut, Settings, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/auth";
 
 export interface NavItem {
   label: string;
@@ -22,6 +23,8 @@ export function DashboardShell({
   children: ReactNode;
 }) {
   const location = useLocation();
+  const nav = useNavigate();
+  const { signOut } = useAuth();
   return (
     <div className="min-h-screen flex">
       <aside className="hidden lg:flex w-64 flex-col border-r border-border/40 glass">
@@ -49,12 +52,12 @@ export function DashboardShell({
           })}
         </nav>
         <div className="p-3 border-t border-border/40">
-          <Link
-            to="/login"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
+          <button
+            onClick={async () => { await signOut(); nav({ to: "/" }); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
           >
             <LogOut className="w-4 h-4" /> Sign out
-          </Link>
+          </button>
         </div>
       </aside>
       <main className="flex-1 min-w-0">
