@@ -66,26 +66,13 @@ function AdminAuth() {
           },
         });
         if (signUpError) {
-          // If account already exists, try to sign in and promote to admin.
           const msg = signUpError.message?.toLowerCase() ?? "";
           const alreadyExists = msg.includes("already") || (signUpError as any).code === "user_already_exists";
-          if (!alreadyExists) throw signUpError;
+          if (alreadyExists) {
+            throw new Error("This email is already registered. Sign in with that account instead of creating it again.");
+          }
 
-          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInErr) throw new Error("This email is already registered. Enter the correct password to promote it to admin.");
-
-          const { data: u } = await supabase.auth.getUser();
-          const uid = u.user!.id;
-          const { error: pErr } = await supabase
-            .from("profiles")
-            .update({ role: "admin", verification_status: "approved", full_name: fullName || undefined })
-            .eq("id", uid);
-          if (pErr) throw pErr;
-          // Insert admin role (ignore duplicate-key)
-          await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-          toast.success("Account promoted to admin ✓");
-          nav({ to: "/admin" });
-          return;
+          throw signUpError;
         }
 
         if (signUpData.session) {
