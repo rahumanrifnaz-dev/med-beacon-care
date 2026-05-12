@@ -23,7 +23,7 @@ export function DashboardShell({
   children: ReactNode;
 }) {
   const location = useLocation();
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const { signOut } = useAuth();
   return (
     <div className="min-h-screen flex">
@@ -53,7 +53,7 @@ export function DashboardShell({
         </nav>
         <div className="p-3 border-t border-border/40">
           <button
-            onClick={async () => { await signOut(); nav({ to: "/" }); }}
+            onClick={async () => { await signOut(); navigate({ to: "/" }); }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
           >
             <LogOut className="w-4 h-4" /> Sign out
