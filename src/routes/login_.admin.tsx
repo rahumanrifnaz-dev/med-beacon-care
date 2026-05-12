@@ -43,7 +43,7 @@ function AdminAuth() {
       } else {
         if (code !== ADMIN_INVITE_CODE) throw new Error("Invalid admin invite code.");
         if (password.length < 8) throw new Error("Password must be at least 8 characters.");
-        const { error } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -51,7 +51,28 @@ function AdminAuth() {
             data: { full_name: fullName, role: "admin" },
           },
         });
-        if (error) throw error;
+        if (signUpError) {
+          // If account already exists, try to sign in and promote to admin.
+          const msg = signUpError.message?.toLowerCase() ?? "";
+          const alreadyExists = msg.includes("already") || (signUpError as any).code === "user_already_exists";
+          if (!alreadyExists) throw signUpError;
+
+          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInErr) throw new Error("This email is already registered. Enter the correct password to promote it to admin.");
+
+          const { data: u } = await supabase.auth.getUser();
+          const uid = u.user!.id;
+          const { error: pErr } = await supabase
+            .from("profiles")
+            .update({ role: "admin", verification_status: "approved", full_name: fullName || undefined })
+            .eq("id", uid);
+          if (pErr) throw pErr;
+          // Insert admin role (ignore duplicate-key)
+          await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
+          toast.success("Account promoted to admin ✓");
+          nav({ to: "/admin" });
+          return;
+        }
         toast.success("Admin account created. You can sign in now.");
         setMode("signin");
       }
