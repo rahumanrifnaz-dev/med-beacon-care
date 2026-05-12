@@ -85,14 +85,14 @@ export function useRequireRole(role: AppRole) {
       return;
     }
     if (profile && profile.role !== role) {
-      const dest = profile.role === "doctor" ? "/doctor" : profile.role === "pharmacist" ? "/pharmacy" : "/patient";
-      nav({ to: dest });
+      nav({ to: dashboardFor(profile.role) });
     }
   }, [user, profile, loading, role, nav]);
   return { user, profile, loading };
 }
 
-export function dashboardFor(role: AppRole | undefined): "/patient" | "/doctor" | "/pharmacy" {
+export function dashboardFor(role: AppRole | undefined): "/patient" | "/doctor" | "/pharmacy" | "/admin" {
+  if (role === "admin") return "/admin";
   if (role === "doctor") return "/doctor";
   if (role === "pharmacist") return "/pharmacy";
   return "/patient";
