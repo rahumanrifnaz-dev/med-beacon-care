@@ -16,6 +16,20 @@ export const Route = createFileRoute("/login_/admin")({
 // Share this only with trusted operators; change it in source to rotate.
 const ADMIN_INVITE_CODE = "MEDICARE-ADMIN-2026";
 
+function getAuthErrorMessage(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? "";
+
+  if (error?.code === "weak_password" || message.includes("weak") || message.includes("easy to guess") || message.includes("pwned")) {
+    return "Choose a stronger password. Avoid common or leaked passwords and use a unique mix of letters, numbers, and symbols.";
+  }
+
+  if (message.includes("email not confirmed")) {
+    return "Your account was created, but your email still needs to be verified before you can sign in.";
+  }
+
+  return error?.message ?? "Something went wrong";
+}
+
 function AdminAuth() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -43,7 +57,7 @@ function AdminAuth() {
       } else {
         if (code !== ADMIN_INVITE_CODE) throw new Error("Invalid admin invite code.");
         if (password.length < 8) throw new Error("Password must be at least 8 characters.");
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -73,11 +87,18 @@ function AdminAuth() {
           nav({ to: "/admin" });
           return;
         }
-        toast.success("Admin account created. You can sign in now.");
+
+        if (signUpData.session) {
+          toast.success("Admin account created ✓");
+          nav({ to: "/admin" });
+          return;
+        }
+
+        toast.success("Admin account created. Please verify your email, then sign in.");
         setMode("signin");
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
