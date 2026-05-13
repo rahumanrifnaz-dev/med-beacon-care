@@ -118,7 +118,7 @@ function PharmacyDashboard() {
         const { data: pu } = supabase.storage.from("medicine-images").getPublicUrl(key);
         image_url = pu.publicUrl || null;
       }
-      const { error } = await supabase.from("pharmacy_medicines").insert({ name: payload.name, dosage: payload.dosage, color: payload.color, image_url, created_by: profile.id }).select().single();
+      const { error } = await supabase.from("pharmacy_medicines").insert({ name: payload.name, dosage: payload.dosage, image_url, created_by: profile.id }).select().single();
       if (error) throw error;
       toast.success("Medicine added");
       setAdding(false);
@@ -142,7 +142,7 @@ function PharmacyDashboard() {
     if (current.has(medId)) current.delete(medId); else current.add(medId);
     const arr = Array.from(current);
     // upsert row for pharmacist
-    const { data, error } = await supabase.from("pharmacy_availability").upsert({ pharmacist_id: profile.id, medicines: arr, updated_at: new Date().toISOString() }, { onConflict: ["pharmacist_id"] }).select().single();
+    const { data, error } = await supabase.from("pharmacy_availability").upsert({ pharmacist_id: profile.id, medicines: arr, updated_at: new Date().toISOString() }, { onConflict: "pharmacist_id" }).select().single();
     if (error) return toast.error(error.message);
     setAvailability(arr);
     toast.success("Availability updated");
