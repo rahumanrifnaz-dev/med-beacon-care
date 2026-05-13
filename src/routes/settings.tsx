@@ -118,7 +118,7 @@ function ProfileSettings({
   profile: any;
   user: any;
 }) {
-  const { refreshProfile } = _useAuthForRefresh();
+  const { refreshProfile } = useAuth();
   const [fullName, setFullName] = useState(profile.full_name ?? "");
   const [phone, setPhone] = useState(profile.phone ?? "");
   const [loading, setLoading] = useState(false);
