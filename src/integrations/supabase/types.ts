@@ -150,6 +150,51 @@ export type Database = {
           },
         ]
       }
+      pharmacy_availability: {
+        Row: {
+          medicines: Json
+          pharmacist_id: string
+          updated_at: string
+        }
+        Insert: {
+          medicines?: Json
+          pharmacist_id: string
+          updated_at?: string
+        }
+        Update: {
+          medicines?: Json
+          pharmacist_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pharmacy_medicines: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dosage: string | null
+          id: string
+          image_url: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dosage?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dosage?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       prescriptions: {
         Row: {
           created_at: string
