@@ -22,6 +22,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
 import { Route as LoginAdminRouteImport } from './routes/login_.admin'
+import { Route as DoctorPrescriptionsRouteImport } from './routes/doctor.prescriptions'
 import { Route as DoctorPatientsRouteImport } from './routes/doctor.patients'
 
 const SignupRoute = SignupRouteImport.update({
@@ -89,6 +90,11 @@ const LoginAdminRoute = LoginAdminRouteImport.update({
   path: '/login/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DoctorPrescriptionsRoute = DoctorPrescriptionsRouteImport.update({
+  id: '/prescriptions',
+  path: '/prescriptions',
+  getParentRoute: () => DoctorRoute,
+} as any)
 const DoctorPatientsRoute = DoctorPatientsRouteImport.update({
   id: '/patients',
   path: '/patients',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login_/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/doctor/patients'
+    | '/doctor/prescriptions'
     | '/login/admin'
     | '/pharmacy/scan'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/doctor/patients'
+    | '/doctor/prescriptions'
     | '/login/admin'
     | '/pharmacy/scan'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/doctor/patients'
+    | '/doctor/prescriptions'
     | '/login_/admin'
     | '/pharmacy/scan'
   fileRoutesById: FileRoutesById
@@ -303,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/doctor/prescriptions': {
+      id: '/doctor/prescriptions'
+      path: '/prescriptions'
+      fullPath: '/doctor/prescriptions'
+      preLoaderRoute: typeof DoctorPrescriptionsRouteImport
+      parentRoute: typeof DoctorRoute
+    }
     '/doctor/patients': {
       id: '/doctor/patients'
       path: '/patients'
@@ -315,10 +334,12 @@ declare module '@tanstack/react-router' {
 
 interface DoctorRouteChildren {
   DoctorPatientsRoute: typeof DoctorPatientsRoute
+  DoctorPrescriptionsRoute: typeof DoctorPrescriptionsRoute
 }
 
 const DoctorRouteChildren: DoctorRouteChildren = {
   DoctorPatientsRoute: DoctorPatientsRoute,
+  DoctorPrescriptionsRoute: DoctorPrescriptionsRoute,
 }
 
 const DoctorRouteWithChildren =
