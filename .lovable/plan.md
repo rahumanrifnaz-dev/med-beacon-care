@@ -1,50 +1,37 @@
-## MediCare+ — Production Build Plan
+## Plan: RBAC sidebar, real-time notifications, profile management
 
-Rename the app to **MediCare+** and ship the full-stack platform on Lovable Cloud.
+Most of this stack already exists (profiles + role enum + user_roles + RLS + admin panel + notifications table). I'll fill the missing pieces:
 
-### Phase 1 — Foundation & broken-link fixes (this turn)
-1. Enable Lovable Cloud (Supabase under the hood).
-2. Rename branding to MediCare+ in Logo, landing, meta, login.
-3. Create the missing routes so navigation works: `/signup`, `/forgot-password`, `/reset-password`, `/doctor`, `/pharmacy`, `/_authenticated` guard.
-4. Database schema:
-   - `profiles` (id → auth.users, full_name, role, doctor_id nullable, phone)
-   - `user_roles` enum + table (patient / doctor / pharmacist) with `has_role()` SECURITY DEFINER
-   - `verification_documents` (user_id, file_path, kind, status: pending/approved/rejected, reviewed_at)
-   - `medications` (id, patient_id, common_name, brand_name, color, shape, dose, schedule_times[], created_by_doctor)
-   - `medication_logs` (med_id, patient_id, scheduled_at, status: taken/skipped/snoozed/missed, source: patient/doctor)
-   - `prescriptions` (doctor_id, patient_id, items jsonb, qr_token unique, status)
-   - `notifications` (user_id, type, title, body, action_required, snooze_until, read)
-   - Storage bucket `verification-docs` (private) with RLS.
-5. RLS on every table; `has_role()` for role checks; doctor can read patient rows only when `profiles.doctor_id = auth.uid()`.
+### 1. Storage — avatars bucket
+New migration:
+- Create public `avatars` bucket
+- RLS on `storage.objects`: public SELECT; authenticated users can INSERT/UPDATE/DELETE only files under a folder named with their `auth.uid()`
 
-### Phase 2 — Auth + verification flow
-6. Signup flow: email/password + Google. Patient signs up directly (active). Doctor & Pharmacist signup forces upload of job-confirmation document → status `pending` → cannot access portal until admin-approved (auto-approved in demo with a clear "Pending review" state shown).
-7. `_authenticated` layout route; role-based redirect post-login to /patient | /doctor | /pharmacy.
-8. Forgot/reset password pages wired to Supabase.
+### 2. Dynamic sidebar (permissions map)
+Refactor `src/components/medi/RoleSidebar.tsx` to a single `MENU_ITEMS` array with `roles: AppRole[]`, then filter by current user's role. Update `DashboardShell` consumers (patient/doctor/pharmacy/admin pages) to use the new helper. Sidebar already hides links the user can't see; 404s handled by existing `notFoundComponent`.
 
-### Phase 3 — Medications with elder-friendly UI
-9. Display **common name** big ("Heart pill") + brand small ("Lisinopril 10mg") + bold color dot + shape icon.
-10. Seed mapping of common conditions → friendly names + colors.
+### 3. Real-time notification bell
+New `src/components/medi/NotificationBell.tsx`:
+- Loads unread count for current user
+- Subscribes to `postgres_changes` on `notifications` filtered by `user_id=eq.{uid}`
+- Shows badge with unread count
+- Replace the static bell in `DashboardShell` header
 
-### Phase 4 — Notifications with OK / Skip / Later (1h)
-11. In-app notification center + toast on due doses pulled from a `useDueDoses` poller.
-12. Three actions write to `medication_logs`: OK→taken, Skip→skipped, Later→snoozed (sets `snooze_until = now + 1h`, re-fires).
-13. Important-step notifications: new prescription, doctor logged a dose for you, refill low, verification approved.
+### 4. Profile page
+New `src/routes/settings.profile.tsx` (or enhance existing `settings.tsx`):
+- Avatar upload with preview
+- On new upload: upload to `avatars/{uid}/{timestamp}.{ext}`, update `profiles.avatar_url`, then delete previous file from storage
+- Form to edit `full_name`, `phone`
+- Uses `useAuth().refreshProfile()` after save
 
-### Phase 5 — Doctor ↔ Patient linking (1:N, N:1)
-14. Patient can request/select one doctor (write `profiles.doctor_id`). Switching requires unlinking first.
-15. Doctor dashboard lists all linked patients.
-16. Doctor can open a patient's medication page and tap "Mark taken" — writes a `medication_logs` row with `source='doctor'`.
+### 5. Notifications enable realtime
+Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;` and `ALTER TABLE public.notifications REPLICA IDENTITY FULL;`
 
-### Phase 6 — QR system
-17. Doctor creates prescription → generates `qr_token` → renders QR (qrcode.react).
-18. Pharmacist `/pharmacy/scan` page uses camera (html5-qrcode) to scan → fetches prescription by token → verify & dispense flow.
-19. Patient page shows their prescription QR for in-person pickup as backup.
+### Files to create/edit
+- `supabase/migrations/<new>.sql` — avatars bucket + storage policies + realtime publication
+- `src/components/medi/RoleSidebar.tsx` — refactor to permissions map
+- `src/components/medi/NotificationBell.tsx` — new
+- `src/components/medi/DashboardShell.tsx` — use NotificationBell
+- `src/routes/settings.tsx` — profile editor + avatar upload/delete
 
-### Technical notes
-- Stack: TanStack Start + Cloud (Supabase). Server functions via `createServerFn` for sensitive ops; browser client for auth/realtime.
-- Libs to add: `qrcode.react`, `html5-qrcode`, `zod`, `@supabase/supabase-js` (auto with Cloud).
-- RLS-first: every policy uses `has_role()` or ownership checks; no client-side role gating only.
-- Notifications use Supabase realtime channel on `notifications` table.
-
-I'll execute Phase 1 immediately after approval, then continue through Phase 6 in follow-up turns since each phase is substantial.
+No changes to auth flow, admin verification, or existing role logic.
