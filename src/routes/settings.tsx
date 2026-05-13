@@ -118,9 +118,88 @@ function ProfileSettings({
   profile: any;
   user: any;
 }) {
+  const { refreshProfile } = useAuth();
   const [fullName, setFullName] = useState(profile.full_name ?? "");
   const [phone, setPhone] = useState(profile.phone ?? "");
   const [loading, setLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url ?? null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Please choose an image file");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const newPath = `${profile.id}/${Date.now()}.${ext}`;
+
+      // 1. Upload new file
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(newPath, file, { cacheControl: "3600", upsert: false });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(newPath);
+      const newUrl = pub.publicUrl;
+
+      // 2. Update profiles.avatar_url
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: newUrl })
+        .eq("id", profile.id);
+      if (updErr) throw updErr;
+
+      // 3. Delete old file (if any) — extract path after `/avatars/`
+      const oldUrl: string | null = profile.avatar_url ?? avatarUrl;
+      if (oldUrl) {
+        const marker = "/avatars/";
+        const idx = oldUrl.indexOf(marker);
+        if (idx !== -1) {
+          const oldPath = oldUrl.slice(idx + marker.length);
+          if (oldPath && oldPath !== newPath) {
+            await supabase.storage.from("avatars").remove([oldPath]);
+          }
+        }
+      }
+
+      setAvatarUrl(newUrl);
+      profile.avatar_url = newUrl;
+      await refreshProfile();
+      toast.success("Profile picture updated");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    if (!avatarUrl) return;
+    if (!confirm("Remove your profile picture?")) return;
+    setUploading(true);
+    try {
+      const marker = "/avatars/";
+      const idx = avatarUrl.indexOf(marker);
+      if (idx !== -1) {
+        const oldPath = avatarUrl.slice(idx + marker.length);
+        if (oldPath) await supabase.storage.from("avatars").remove([oldPath]);
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", profile.id);
+      if (error) throw error;
+      setAvatarUrl(null);
+      profile.avatar_url = null;
+      await refreshProfile();
+      toast.success("Profile picture removed");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -131,6 +210,7 @@ function ProfileSettings({
         .eq("id", profile.id);
 
       if (error) throw error;
+      await refreshProfile();
       toast.success("Profile updated successfully");
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
@@ -143,6 +223,32 @@ function ProfileSettings({
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
+        <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-secondary/20">
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-primary flex items-center justify-center text-2xl font-bold text-primary-foreground shrink-0">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              (profile.full_name?.[0] ?? "U").toUpperCase()
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors disabled:opacity-50">
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={uploading} />
+              {uploading ? "Uploading..." : avatarUrl ? "Change picture" : "Upload picture"}
+            </label>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={handleAvatarRemove}
+                disabled={uploading}
+                className="ml-2 px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+              >
+                Remove
+              </button>
+            )}
+            <p className="text-xs text-muted-foreground">PNG or JPG · max 5MB</p>
+          </div>
+        </div>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Email</label>

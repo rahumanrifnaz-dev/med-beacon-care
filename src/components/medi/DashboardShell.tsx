@@ -5,6 +5,7 @@ import { Bell, LogOut, Settings, Menu, X, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
+import { NotificationBell } from "./NotificationBell";
 
 export interface NavItem {
   label: string;
@@ -76,10 +77,7 @@ export function DashboardShell({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <Link to="/notifications" className="p-2 rounded-xl hover:bg-secondary/60 transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
-            </Link>
+            <NotificationBell />
             <Link to="/settings" className="p-2 rounded-xl hover:bg-secondary/60 transition-colors">
               <Settings className="w-5 h-5" />
             </Link>
