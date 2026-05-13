@@ -70,35 +70,109 @@ const mockNotifications: Notification[] = [
 function NotificationsPage() {
   const { profile } = useAuth();
   useRequireRole(["patient", "doctor", "pharmacist", "admin"]);
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  useEffect(() => {
+    if (!profile) return;
+
+    let active = true;
+
+    const load = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+      if (error) return console.error('Failed to load notifications', error);
+      if (active) {
+        setNotifications((data ?? []).map((n: any) => ({
+          id: n.id,
+          type: 'info',
+          title: n.title,
+          message: n.body ?? '',
+          created_at: n.created_at,
+          read: !!n.read_at,
+          action_url: undefined,
+        })));
+      }
+    };
+
+    void load();
+
+    const channel = supabase
+      .channel(`notifications:page:${profile.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}` },
+        (payload) => {
+          const ev = payload.eventType;
+          const record = (payload.new ?? payload.old) as any;
+          if (!record) return;
+          setNotifications((prev) => {
+            if (ev === 'INSERT') {
+              const n = {
+                id: record.id,
+                type: 'info',
+                title: record.title,
+                message: record.body ?? '',
+                created_at: record.created_at,
+                read: !!record.read_at,
+                action_url: undefined,
+              } as Notification;
+              return [n, ...prev];
+            }
+            if (ev === 'UPDATE') {
+              return prev.map((p) => (p.id === record.id ? { ...p, title: record.title, message: record.body ?? '', read: !!record.read_at } : p));
+            }
+            if (ev === 'DELETE') {
+              return prev.filter((p) => p.id !== record.id);
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
 
   if (!profile) return null;
 
   const nav = getRoleNav(profile.role);
   const filteredNotifications = filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const markAsRead = async (id: string) => {
+    const ts = new Date().toISOString();
+    const { error } = await supabase.from('notifications').update({ read_at: ts }).eq('id', id);
+    if (error) return toast.error(error.message ?? 'Failed to mark read');
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    const ts = new Date().toISOString();
+    const { error } = await supabase.from('notifications').update({ read_at: ts }).eq('user_id', profile?.id ?? '');
+    if (error) return toast.error(error.message ?? 'Failed to mark all read');
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    toast.success("All notifications marked as read");
+    toast.success('All notifications marked as read');
   };
 
-  const deleteNotification = (id: string) => {
+  const deleteNotification = async (id: string) => {
+    const { error } = await supabase.from('notifications').delete().eq('id', id);
+    if (error) return toast.error(error.message ?? 'Failed to delete');
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    toast.success("Notification deleted");
+    toast.success('Notification deleted');
   };
 
-  const clearAll = () => {
-    if (confirm("Are you sure you want to clear all notifications?")) {
-      setNotifications([]);
-      toast.success("All notifications cleared");
-    }
+  const clearAll = async () => {
+    if (!confirm('Are you sure you want to clear all notifications?')) return;
+    const { error } = await supabase.from('notifications').delete().eq('user_id', profile?.id ?? '');
+    if (error) return toast.error(error.message ?? 'Failed to clear');
+    setNotifications([]);
+    toast.success('All notifications cleared');
   };
 
   const getNotificationIcon = (type: string) => {

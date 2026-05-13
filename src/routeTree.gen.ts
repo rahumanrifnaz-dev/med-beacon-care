@@ -21,6 +21,12 @@ import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
+import { Route as PharmacyMessagesRouteImport } from './routes/pharmacy.messages'
+import { Route as PatientScanQrRouteImport } from './routes/patient.scan-qr'
+import { Route as PatientPrescriptionsRouteImport } from './routes/patient.prescriptions'
+import { Route as PatientMessagesRouteImport } from './routes/patient.messages'
+import { Route as PatientFindDoctorRouteImport } from './routes/patient.find-doctor'
+import { Route as PatientAdherenceRouteImport } from './routes/patient.adherence'
 import { Route as LoginAdminRouteImport } from './routes/login_.admin'
 import { Route as DoctorPrescriptionsRouteImport } from './routes/doctor.prescriptions'
 import { Route as DoctorPendingRouteImport } from './routes/doctor.pending'
@@ -87,6 +93,36 @@ const PharmacyScanRoute = PharmacyScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => PharmacyRoute,
 } as any)
+const PharmacyMessagesRoute = PharmacyMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => PharmacyRoute,
+} as any)
+const PatientScanQrRoute = PatientScanQrRouteImport.update({
+  id: '/scan-qr',
+  path: '/scan-qr',
+  getParentRoute: () => PatientRoute,
+} as any)
+const PatientPrescriptionsRoute = PatientPrescriptionsRouteImport.update({
+  id: '/prescriptions',
+  path: '/prescriptions',
+  getParentRoute: () => PatientRoute,
+} as any)
+const PatientMessagesRoute = PatientMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => PatientRoute,
+} as any)
+const PatientFindDoctorRoute = PatientFindDoctorRouteImport.update({
+  id: '/find-doctor',
+  path: '/find-doctor',
+  getParentRoute: () => PatientRoute,
+} as any)
+const PatientAdherenceRoute = PatientAdherenceRouteImport.update({
+  id: '/adherence',
+  path: '/adherence',
+  getParentRoute: () => PatientRoute,
+} as any)
 const LoginAdminRoute = LoginAdminRouteImport.update({
   id: '/login_/admin',
   path: '/login/admin',
@@ -120,7 +156,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
-  '/patient': typeof PatientRoute
+  '/patient': typeof PatientRouteWithChildren
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -130,6 +166,12 @@ export interface FileRoutesByFullPath {
   '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
+  '/patient/adherence': typeof PatientAdherenceRoute
+  '/patient/find-doctor': typeof PatientFindDoctorRoute
+  '/patient/messages': typeof PatientMessagesRoute
+  '/patient/prescriptions': typeof PatientPrescriptionsRoute
+  '/patient/scan-qr': typeof PatientScanQrRoute
+  '/pharmacy/messages': typeof PharmacyMessagesRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesByTo {
@@ -139,7 +181,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
-  '/patient': typeof PatientRoute
+  '/patient': typeof PatientRouteWithChildren
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -149,6 +191,12 @@ export interface FileRoutesByTo {
   '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
+  '/patient/adherence': typeof PatientAdherenceRoute
+  '/patient/find-doctor': typeof PatientFindDoctorRoute
+  '/patient/messages': typeof PatientMessagesRoute
+  '/patient/prescriptions': typeof PatientPrescriptionsRoute
+  '/patient/scan-qr': typeof PatientScanQrRoute
+  '/pharmacy/messages': typeof PharmacyMessagesRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesById {
@@ -159,7 +207,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
-  '/patient': typeof PatientRoute
+  '/patient': typeof PatientRouteWithChildren
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -169,6 +217,12 @@ export interface FileRoutesById {
   '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login_/admin': typeof LoginAdminRoute
+  '/patient/adherence': typeof PatientAdherenceRoute
+  '/patient/find-doctor': typeof PatientFindDoctorRoute
+  '/patient/messages': typeof PatientMessagesRoute
+  '/patient/prescriptions': typeof PatientPrescriptionsRoute
+  '/patient/scan-qr': typeof PatientScanQrRoute
+  '/pharmacy/messages': typeof PharmacyMessagesRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +244,12 @@ export interface FileRouteTypes {
     | '/doctor/pending'
     | '/doctor/prescriptions'
     | '/login/admin'
+    | '/patient/adherence'
+    | '/patient/find-doctor'
+    | '/patient/messages'
+    | '/patient/prescriptions'
+    | '/patient/scan-qr'
+    | '/pharmacy/messages'
     | '/pharmacy/scan'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +269,12 @@ export interface FileRouteTypes {
     | '/doctor/pending'
     | '/doctor/prescriptions'
     | '/login/admin'
+    | '/patient/adherence'
+    | '/patient/find-doctor'
+    | '/patient/messages'
+    | '/patient/prescriptions'
+    | '/patient/scan-qr'
+    | '/pharmacy/messages'
     | '/pharmacy/scan'
   id:
     | '__root__'
@@ -228,6 +294,12 @@ export interface FileRouteTypes {
     | '/doctor/pending'
     | '/doctor/prescriptions'
     | '/login_/admin'
+    | '/patient/adherence'
+    | '/patient/find-doctor'
+    | '/patient/messages'
+    | '/patient/prescriptions'
+    | '/patient/scan-qr'
+    | '/pharmacy/messages'
     | '/pharmacy/scan'
   fileRoutesById: FileRoutesById
 }
@@ -238,7 +310,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
-  PatientRoute: typeof PatientRoute
+  PatientRoute: typeof PatientRouteWithChildren
   PharmacyRoute: typeof PharmacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
@@ -332,6 +404,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PharmacyScanRouteImport
       parentRoute: typeof PharmacyRoute
     }
+    '/pharmacy/messages': {
+      id: '/pharmacy/messages'
+      path: '/messages'
+      fullPath: '/pharmacy/messages'
+      preLoaderRoute: typeof PharmacyMessagesRouteImport
+      parentRoute: typeof PharmacyRoute
+    }
+    '/patient/scan-qr': {
+      id: '/patient/scan-qr'
+      path: '/scan-qr'
+      fullPath: '/patient/scan-qr'
+      preLoaderRoute: typeof PatientScanQrRouteImport
+      parentRoute: typeof PatientRoute
+    }
+    '/patient/prescriptions': {
+      id: '/patient/prescriptions'
+      path: '/prescriptions'
+      fullPath: '/patient/prescriptions'
+      preLoaderRoute: typeof PatientPrescriptionsRouteImport
+      parentRoute: typeof PatientRoute
+    }
+    '/patient/messages': {
+      id: '/patient/messages'
+      path: '/messages'
+      fullPath: '/patient/messages'
+      preLoaderRoute: typeof PatientMessagesRouteImport
+      parentRoute: typeof PatientRoute
+    }
+    '/patient/find-doctor': {
+      id: '/patient/find-doctor'
+      path: '/find-doctor'
+      fullPath: '/patient/find-doctor'
+      preLoaderRoute: typeof PatientFindDoctorRouteImport
+      parentRoute: typeof PatientRoute
+    }
+    '/patient/adherence': {
+      id: '/patient/adherence'
+      path: '/adherence'
+      fullPath: '/patient/adherence'
+      preLoaderRoute: typeof PatientAdherenceRouteImport
+      parentRoute: typeof PatientRoute
+    }
     '/login_/admin': {
       id: '/login_/admin'
       path: '/login/admin'
@@ -387,11 +501,32 @@ const DoctorRouteChildren: DoctorRouteChildren = {
 const DoctorRouteWithChildren =
   DoctorRoute._addFileChildren(DoctorRouteChildren)
 
+interface PatientRouteChildren {
+  PatientAdherenceRoute: typeof PatientAdherenceRoute
+  PatientFindDoctorRoute: typeof PatientFindDoctorRoute
+  PatientMessagesRoute: typeof PatientMessagesRoute
+  PatientPrescriptionsRoute: typeof PatientPrescriptionsRoute
+  PatientScanQrRoute: typeof PatientScanQrRoute
+}
+
+const PatientRouteChildren: PatientRouteChildren = {
+  PatientAdherenceRoute: PatientAdherenceRoute,
+  PatientFindDoctorRoute: PatientFindDoctorRoute,
+  PatientMessagesRoute: PatientMessagesRoute,
+  PatientPrescriptionsRoute: PatientPrescriptionsRoute,
+  PatientScanQrRoute: PatientScanQrRoute,
+}
+
+const PatientRouteWithChildren =
+  PatientRoute._addFileChildren(PatientRouteChildren)
+
 interface PharmacyRouteChildren {
+  PharmacyMessagesRoute: typeof PharmacyMessagesRoute
   PharmacyScanRoute: typeof PharmacyScanRoute
 }
 
 const PharmacyRouteChildren: PharmacyRouteChildren = {
+  PharmacyMessagesRoute: PharmacyMessagesRoute,
   PharmacyScanRoute: PharmacyScanRoute,
 }
 
@@ -406,7 +541,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
-  PatientRoute: PatientRoute,
+  PatientRoute: PatientRouteWithChildren,
   PharmacyRoute: PharmacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
@@ -416,3 +551,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

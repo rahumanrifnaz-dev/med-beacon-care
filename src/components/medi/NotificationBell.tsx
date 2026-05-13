@@ -5,25 +5,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export function NotificationBell() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setUnread(0);
+      return;
+    }
+
     let active = true;
 
     const loadCount = async () => {
-      const { count } = await supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .is("read_at", null);
-      if (active) setUnread(count ?? 0);
+      try {
+        // Fetch user-specific unread notifications
+        const { data: userData } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("user_id", user.id)
+          .is("read_at", null);
+
+        if (active) setUnread(userData?.length ?? 0);
+      } catch (err) {
+        console.error("Notification count error:", err);
+        if (active) setUnread(0);
+      }
     };
 
     void loadCount();
 
-    const channel = supabase
+    const channelUser = supabase
       .channel(`notifications:${user.id}`)
       .on(
         "postgres_changes",
@@ -36,15 +47,18 @@ export function NotificationBell() {
 
     return () => {
       active = false;
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelUser);
     };
-  }, [user]);
+  }, [user?.id]);
 
   return (
     <Link to="/notifications" className="p-2 rounded-xl hover:bg-secondary/60 transition-colors relative" aria-label="Notifications">
       <Bell className="w-5 h-5" />
       {unread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
+        <span
+          className="absolute -top-0.5 -right-0.5 px-1 rounded-full bg-accent text-accent-foreground font-bold flex items-center justify-center"
+          style={{ minWidth: 18, height: 18, fontSize: 10 }}
+        >
           {unread > 99 ? "99+" : unread}
         </span>
       )}

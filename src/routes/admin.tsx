@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ShieldCheck, ClipboardList, Users, FileCheck2, FileX2, Eye, Loader2 } from "lucide-react";
 import { DashboardShell, Panel, StatCard } from "@/components/medi/DashboardShell";
@@ -22,6 +22,10 @@ interface PendingRow {
 
 function AdminDashboard() {
   const { profile, loading } = useRequireRole("admin");
+  const location = useLocation();
+  if (location.pathname !== "/admin") {
+    return <Outlet />;
+  }
   const [tab, setTab] = useState<"pending" | "all">("pending");
   const [pending, setPending] = useState<PendingRow[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);

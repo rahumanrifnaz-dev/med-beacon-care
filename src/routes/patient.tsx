@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { DashboardShell, Panel, StatCard } from "@/components/medi/DashboardShell";
 import { CheckCircle2, Clock, Heart, LayoutDashboard, MessageCircle, Pill, Plus, QrCode, Stethoscope, TrendingUp, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
@@ -44,6 +44,10 @@ interface EnrichedRx extends Rx {
 
 function PatientDashboard() {
   const { profile, refreshProfile } = useAuth();
+  const location = useLocation();
+  if (location.pathname !== "/patient") {
+    return <Outlet />;
+  }
   useRequireRole("patient");
   const [meds, setMeds] = useState<Med[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -207,43 +211,20 @@ function PatientDashboard() {
           </Panel>
         </div>
 
-        <Panel title="My prescriptions" subtitle="Show this QR at the pharmacy">
+        <Panel title="My prescriptions" subtitle="Latest active prescriptions">
           {rxs.length === 0 ? (
             <p className="text-sm text-muted-foreground">No prescriptions yet.</p>
           ) : (
-            <div className="space-y-4">
-              {rxs.map((r) => (
-                <div key={r.id} className="p-4 rounded-xl bg-secondary/30">
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="bg-white p-3 rounded-xl self-start"><QRCodeSVG value={r.qr_token} size={120} /></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Status</p>
-                          <p className="font-semibold capitalize">{r.status}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <div className="mt-4 space-y-2">
-                        {(r.medicineDetails ?? []).map((item, index) => (
-                          <div key={`${r.id}-${index}`} className="flex items-center gap-3 p-3 rounded-xl bg-background/60 border border-border/60">
-                            <div className="w-12 h-12 rounded-lg shrink-0 flex items-center justify-center overflow-hidden" style={{ backgroundColor: item.color }}>
-                              {item.image_url ? <img src={item.image_url} alt={item.med} className="w-full h-full object-cover" /> : <span className="text-white/70 text-xs font-bold">💊</span>}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm">{item.med}</p>
-                              <p className="text-xs text-muted-foreground">{item.dose} · {item.freq}</p>
-                            </div>
-                            <span className={`text-xs px-2.5 py-1 rounded-full ${item.available ? "bg-success/20 text-success" : "bg-secondary/80 text-muted-foreground"}`}>
-                              {item.available ? `Available: ${item.pharmacist_name}` : "Not available anywhere"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                <div>
+                  <p className="text-sm font-medium">{rxs.length} active prescription{rxs.length !== 1 ? 's' : ''}</p>
+                  <p className="text-xs text-muted-foreground">Latest: {new Date(rxs[0]?.created_at).toLocaleDateString()}</p>
                 </div>
-              ))}
+                <Link to="/patient/prescriptions" className="text-xs px-3 py-1.5 rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:shadow-glow/80">
+                  View All
+                </Link>
+              </div>
             </div>
           )}
         </Panel>

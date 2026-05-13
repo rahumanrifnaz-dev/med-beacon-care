@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { DashboardShell, Panel, StatCard } from "@/components/medi/DashboardShell";
 import { Boxes, LayoutDashboard, Package, QrCode, ScanLine, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -16,6 +16,10 @@ export const Route = createFileRoute("/pharmacy")({
 function PharmacyDashboard() {
   const { profile } = useAuth();
   useRequireRole("pharmacist");
+  const location = useLocation();
+  if (location.pathname !== "/pharmacy") {
+    return <Outlet />;
+  }
   const [rxs, setRxs] = useState<any[]>([]);
   const [token, setToken] = useState("");
   const [medicines, setMedicines] = useState<any[]>([]);

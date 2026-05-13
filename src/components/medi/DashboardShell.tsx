@@ -36,12 +36,13 @@ export function DashboardShell({
         </div>
         <nav className="flex-1 px-3 space-y-1">
           {nav.map((item, i) => {
-            const active = location.pathname === item.to;
+            const active = location.pathname === item.to || location.pathname.startsWith(item.to + "/");
             const Icon = item.icon;
-            return (
+              return (
               <Link
                 key={`${item.to}-${item.label}-${i}`}
                 to={item.to}
+                onClick={() => navigate({ to: item.to })}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
                     ? "bg-gradient-primary text-primary-foreground shadow-glow"
@@ -99,13 +100,16 @@ export function DashboardShell({
               </div>
               <nav className="space-y-2">
                 {nav.map((item, i) => {
-                  const active = location.pathname === item.to;
+                  const active = location.pathname === item.to || location.pathname.startsWith(item.to + "/");
                   const Icon = item.icon;
                   return (
                     <Link
                       key={`${item.to}-${item.label}-mobile-${i}`}
                       to={item.to}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate({ to: item.to });
+                      }}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         active
                           ? "bg-gradient-primary text-primary-foreground shadow-glow"
