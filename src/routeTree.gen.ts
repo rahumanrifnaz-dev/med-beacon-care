@@ -25,6 +25,7 @@ import { Route as LoginAdminRouteImport } from './routes/login_.admin'
 import { Route as DoctorPrescriptionsRouteImport } from './routes/doctor.prescriptions'
 import { Route as DoctorPendingRouteImport } from './routes/doctor.pending'
 import { Route as DoctorPatientsRouteImport } from './routes/doctor.patients'
+import { Route as DoctorMessagesRouteImport } from './routes/doctor.messages'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -106,6 +107,11 @@ const DoctorPatientsRoute = DoctorPatientsRouteImport.update({
   path: '/patients',
   getParentRoute: () => DoctorRoute,
 } as any)
+const DoctorMessagesRoute = DoctorMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => DoctorRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/doctor/messages': typeof DoctorMessagesRoute
   '/doctor/patients': typeof DoctorPatientsRoute
   '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/doctor/messages': typeof DoctorMessagesRoute
   '/doctor/patients': typeof DoctorPatientsRoute
   '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/doctor/messages': typeof DoctorMessagesRoute
   '/doctor/patients': typeof DoctorPatientsRoute
   '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/doctor/messages'
     | '/doctor/patients'
     | '/doctor/pending'
     | '/doctor/prescriptions'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/doctor/messages'
     | '/doctor/patients'
     | '/doctor/pending'
     | '/doctor/prescriptions'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/doctor/messages'
     | '/doctor/patients'
     | '/doctor/pending'
     | '/doctor/prescriptions'
@@ -348,16 +360,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DoctorPatientsRouteImport
       parentRoute: typeof DoctorRoute
     }
+    '/doctor/messages': {
+      id: '/doctor/messages'
+      path: '/messages'
+      fullPath: '/doctor/messages'
+      preLoaderRoute: typeof DoctorMessagesRouteImport
+      parentRoute: typeof DoctorRoute
+    }
   }
 }
 
 interface DoctorRouteChildren {
+  DoctorMessagesRoute: typeof DoctorMessagesRoute
   DoctorPatientsRoute: typeof DoctorPatientsRoute
   DoctorPendingRoute: typeof DoctorPendingRoute
   DoctorPrescriptionsRoute: typeof DoctorPrescriptionsRoute
 }
 
 const DoctorRouteChildren: DoctorRouteChildren = {
+  DoctorMessagesRoute: DoctorMessagesRoute,
   DoctorPatientsRoute: DoctorPatientsRoute,
   DoctorPendingRoute: DoctorPendingRoute,
   DoctorPrescriptionsRoute: DoctorPrescriptionsRoute,
