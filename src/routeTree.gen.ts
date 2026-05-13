@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
 import { Route as LoginAdminRouteImport } from './routes/login_.admin'
 import { Route as DoctorPrescriptionsRouteImport } from './routes/doctor.prescriptions'
+import { Route as DoctorPendingRouteImport } from './routes/doctor.pending'
 import { Route as DoctorPatientsRouteImport } from './routes/doctor.patients'
 
 const SignupRoute = SignupRouteImport.update({
@@ -95,6 +96,11 @@ const DoctorPrescriptionsRoute = DoctorPrescriptionsRouteImport.update({
   path: '/prescriptions',
   getParentRoute: () => DoctorRoute,
 } as any)
+const DoctorPendingRoute = DoctorPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => DoctorRoute,
+} as any)
 const DoctorPatientsRoute = DoctorPatientsRouteImport.update({
   id: '/patients',
   path: '/patients',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/pending': typeof DoctorPendingRoute
   '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login_/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/doctor/patients'
+    | '/doctor/pending'
     | '/doctor/prescriptions'
     | '/login/admin'
     | '/pharmacy/scan'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/doctor/patients'
+    | '/doctor/pending'
     | '/doctor/prescriptions'
     | '/login/admin'
     | '/pharmacy/scan'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signup'
     | '/doctor/patients'
+    | '/doctor/pending'
     | '/doctor/prescriptions'
     | '/login_/admin'
     | '/pharmacy/scan'
@@ -322,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DoctorPrescriptionsRouteImport
       parentRoute: typeof DoctorRoute
     }
+    '/doctor/pending': {
+      id: '/doctor/pending'
+      path: '/pending'
+      fullPath: '/doctor/pending'
+      preLoaderRoute: typeof DoctorPendingRouteImport
+      parentRoute: typeof DoctorRoute
+    }
     '/doctor/patients': {
       id: '/doctor/patients'
       path: '/patients'
@@ -334,11 +353,13 @@ declare module '@tanstack/react-router' {
 
 interface DoctorRouteChildren {
   DoctorPatientsRoute: typeof DoctorPatientsRoute
+  DoctorPendingRoute: typeof DoctorPendingRoute
   DoctorPrescriptionsRoute: typeof DoctorPrescriptionsRoute
 }
 
 const DoctorRouteChildren: DoctorRouteChildren = {
   DoctorPatientsRoute: DoctorPatientsRoute,
+  DoctorPendingRoute: DoctorPendingRoute,
   DoctorPrescriptionsRoute: DoctorPrescriptionsRoute,
 }
 
