@@ -111,7 +111,7 @@ export function useAuth() {
   return ctx;
 }
 
-export function useRequireRole(role: AppRole) {
+export function useRequireRole(role: AppRole | AppRole[]) {
   const { user, profile, loading } = useAuth();
   const nav = useNavigate();
   useEffect(() => {
@@ -120,7 +120,8 @@ export function useRequireRole(role: AppRole) {
       nav({ to: "/login" });
       return;
     }
-    if (profile && profile.role !== role) {
+    const allowedRoles = Array.isArray(role) ? role : [role];
+    if (profile && !allowedRoles.includes(profile.role)) {
       nav({ to: dashboardFor(profile.role) });
     }
   }, [user, profile, loading, role, nav]);

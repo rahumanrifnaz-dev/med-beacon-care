@@ -11,19 +11,12 @@ import { DoseReminder } from "@/components/medi/DoseReminder";
 import { DailyHealthTip } from "@/components/medi/DailyHealthTip";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
+import { getRoleNav } from "@/components/medi/RoleSidebar";
 
 export const Route = createFileRoute("/patient")({
   component: PatientDashboard,
   head: () => ({ meta: [{ title: "Patient · MediCare+" }] }),
 });
-
-const nav = [
-  { label: "Overview", to: "/patient", icon: LayoutDashboard },
-  { label: "Find doctor", to: "/patient", icon: Stethoscope },
-  { label: "Prescriptions", to: "/patient", icon: Pill },
-  { label: "Scan QR", to: "/patient", icon: QrCode },
-  { label: "Messages", to: "/patient", icon: MessageCircle },
-];
 
 interface Med {
   id: string;
@@ -153,7 +146,7 @@ function PatientDashboard() {
   return (
     <>
       <DoseReminder patientId={profile.id} />
-      <DashboardShell role="Patient Portal" name={profile.full_name?.split(" ")[0] ?? "there"} nav={nav}>
+      <DashboardShell role={profile.role} name={profile.full_name?.split(" ")[0] ?? "there"} nav={getRoleNav(profile.role)}>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Today's adherence" value={`${adherence}%`} hint={`${takenCount} of ${totalToday} taken`} icon={TrendingUp} />
           <StatCard label="Active meds" value={String(meds.length)} hint="Tap to log" icon={Pill} />

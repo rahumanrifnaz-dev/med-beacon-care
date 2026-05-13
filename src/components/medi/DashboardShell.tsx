@@ -76,13 +76,13 @@ export function DashboardShell({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <button className="p-2 rounded-xl hover:bg-secondary/60 transition-colors relative">
+            <Link to="/notifications" className="p-2 rounded-xl hover:bg-secondary/60 transition-colors relative">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
-            </button>
-            <button className="p-2 rounded-xl hover:bg-secondary/60 transition-colors">
+            </Link>
+            <Link to="/settings" className="p-2 rounded-xl hover:bg-secondary/60 transition-colors">
               <Settings className="w-5 h-5" />
-            </button>
+            </Link>
             <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-sm font-semibold ml-2">
               {name[0]}
             </div>

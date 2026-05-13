@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PharmacyRouteImport } from './routes/pharmacy'
 import { Route as PatientRouteImport } from './routes/patient'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DoctorRouteImport } from './routes/doctor'
@@ -24,6 +26,11 @@ import { Route as LoginAdminRouteImport } from './routes/login_.admin'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -39,6 +46,11 @@ const PharmacyRoute = PharmacyRouteImport.update({
 const PatientRoute = PatientRouteImport.update({
   id: '/patient',
   path: '/patient',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -83,9 +95,11 @@ export interface FileRoutesByFullPath {
   '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/patient': typeof PatientRoute
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
@@ -96,9 +110,11 @@ export interface FileRoutesByTo {
   '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/patient': typeof PatientRoute
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
@@ -110,9 +126,11 @@ export interface FileRoutesById {
   '/doctor': typeof DoctorRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/patient': typeof PatientRoute
   '/pharmacy': typeof PharmacyRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/login_/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
@@ -125,9 +143,11 @@ export interface FileRouteTypes {
     | '/doctor'
     | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/patient'
     | '/pharmacy'
     | '/reset-password'
+    | '/settings'
     | '/signup'
     | '/login/admin'
     | '/pharmacy/scan'
@@ -138,9 +158,11 @@ export interface FileRouteTypes {
     | '/doctor'
     | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/patient'
     | '/pharmacy'
     | '/reset-password'
+    | '/settings'
     | '/signup'
     | '/login/admin'
     | '/pharmacy/scan'
@@ -151,9 +173,11 @@ export interface FileRouteTypes {
     | '/doctor'
     | '/forgot-password'
     | '/login'
+    | '/notifications'
     | '/patient'
     | '/pharmacy'
     | '/reset-password'
+    | '/settings'
     | '/signup'
     | '/login_/admin'
     | '/pharmacy/scan'
@@ -165,9 +189,11 @@ export interface RootRouteChildren {
   DoctorRoute: typeof DoctorRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   PatientRoute: typeof PatientRoute
   PharmacyRoute: typeof PharmacyRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   LoginAdminRoute: typeof LoginAdminRoute
 }
@@ -179,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -200,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/patient'
       fullPath: '/patient'
       preLoaderRoute: typeof PatientRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -272,9 +312,11 @@ const rootRouteChildren: RootRouteChildren = {
   DoctorRoute: DoctorRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   PatientRoute: PatientRoute,
   PharmacyRoute: PharmacyRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   LoginAdminRoute: LoginAdminRoute,
 }

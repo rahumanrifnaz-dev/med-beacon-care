@@ -1,4 +1,7 @@
 -- Create pharmacy medicines catalog and per-pharmacist availability
+-- NOTE: Pharmacists can ONLY add/update/delete medicines and manage availability AFTER admin approval
+-- Approval is checked via: role = 'pharmacist' AND approval_status = 'approved' in auth.users raw_app_meta_data
+-- Unapproved users must wait for admin approval before performing any pharmacist actions
 
 -- Catalog of medicines that pharmacies can add
 CREATE TABLE IF NOT EXISTS public.pharmacy_medicines (
@@ -15,16 +18,44 @@ ALTER TABLE public.pharmacy_medicines ENABLE ROW LEVEL SECURITY;
 -- Allow authenticated users to read the catalog (doctors will need this to select)
 CREATE POLICY "PharmacyMeds: read any authed" ON public.pharmacy_medicines FOR SELECT
   USING (auth.uid() IS NOT NULL);
--- Allow pharmacists to insert medicines; ensure created_by matches
-CREATE POLICY "PharmacyMeds: insert by pharmacist" ON public.pharmacy_medicines FOR INSERT
-  WITH CHECK (created_by = auth.uid());
--- Allow pharmacists to update their own entries
-CREATE POLICY "PharmacyMeds: update own" ON public.pharmacy_medicines FOR UPDATE
-  USING (created_by = auth.uid())
-  WITH CHECK (created_by = auth.uid());
--- Allow pharmacists to delete their own entries
-CREATE POLICY "PharmacyMeds: delete own" ON public.pharmacy_medicines FOR DELETE
-  USING (created_by = auth.uid());
+-- Allow only APPROVED pharmacists to insert medicines; ensure created_by matches
+CREATE POLICY "PharmacyMeds: insert by approved pharmacist" ON public.pharmacy_medicines FOR INSERT
+  WITH CHECK (
+    created_by = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  );
+-- Allow only APPROVED pharmacists to update their own entries
+CREATE POLICY "PharmacyMeds: update own approved" ON public.pharmacy_medicines FOR UPDATE
+  USING (
+    created_by = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  )
+  WITH CHECK (
+    created_by = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  );
+-- Allow only APPROVED pharmacists to delete their own entries
+CREATE POLICY "PharmacyMeds: delete own approved" ON public.pharmacy_medicines FOR DELETE
+  USING (
+    created_by = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  );
 
 -- Per-pharmacist availability mapping (stores list of medicine ids)
 CREATE TABLE IF NOT EXISTS public.pharmacy_availability (
@@ -34,16 +65,44 @@ CREATE TABLE IF NOT EXISTS public.pharmacy_availability (
 );
 ALTER TABLE public.pharmacy_availability ENABLE ROW LEVEL SECURITY;
 
--- Pharmacist can select/insert/update their own availability row
+-- Pharmacist can select/insert/update their own availability row (ONLY if approved)
 CREATE POLICY "PharmacyAvail: select authed" ON public.pharmacy_availability FOR SELECT
   USING (auth.uid() IS NOT NULL);
-CREATE POLICY "PharmacyAvail: upsert own" ON public.pharmacy_availability FOR INSERT
-  WITH CHECK (pharmacist_id = auth.uid());
-CREATE POLICY "PharmacyAvail: update own" ON public.pharmacy_availability FOR UPDATE
-  USING (pharmacist_id = auth.uid())
-  WITH CHECK (pharmacist_id = auth.uid());
-CREATE POLICY "PharmacyAvail: delete own" ON public.pharmacy_availability FOR DELETE
-  USING (pharmacist_id = auth.uid());
+CREATE POLICY "PharmacyAvail: insert own approved" ON public.pharmacy_availability FOR INSERT
+  WITH CHECK (
+    pharmacist_id = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  );
+CREATE POLICY "PharmacyAvail: update own approved" ON public.pharmacy_availability FOR UPDATE
+  USING (
+    pharmacist_id = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  )
+  WITH CHECK (
+    pharmacist_id = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  );
+CREATE POLICY "PharmacyAvail: delete own approved" ON public.pharmacy_availability FOR DELETE
+  USING (
+    pharmacist_id = auth.uid() AND
+    EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = auth.uid() AND u.raw_app_meta_data->>'role' = 'pharmacist'
+      AND u.raw_app_meta_data->>'approval_status' = 'approved'
+    )
+  );
 
 -- Create public storage bucket for medicine images (safe to serve publicly)
 INSERT INTO storage.buckets (id, name, public) VALUES ('medicine-images', 'medicine-images', true)

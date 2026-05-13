@@ -8,17 +8,12 @@ import { MED_CATALOG } from "@/lib/medications";
 import { PillIcon } from "@/components/medi/PillIcon";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
+import { getRoleNav } from "@/components/medi/RoleSidebar";
 
 export const Route = createFileRoute("/doctor")({
   component: DoctorDashboard,
   head: () => ({ meta: [{ title: "Doctor · MediCare+" }] }),
 });
-
-const nav = [
-  { label: "Overview", to: "/doctor", icon: LayoutDashboard },
-  { label: "Patients", to: "/doctor", icon: Users },
-  { label: "Prescribe", to: "/doctor", icon: ClipboardList },
-];
 
 function DoctorDashboard() {
   const { profile } = useAuth();
@@ -100,7 +95,7 @@ function DoctorDashboard() {
   const pending = profile.verification_status === "pending";
 
   return (
-    <DashboardShell role="Doctor Portal" name={profile.full_name?.split(" ")[0] ?? "Doctor"} nav={nav}>
+    <DashboardShell role={profile.role} name={profile.full_name?.split(" ")[0] ?? "Doctor"} nav={getRoleNav(profile.role)}>
       {pending && (
         <div className="rounded-2xl bg-warning/15 border border-warning/40 p-4 text-sm">
           Your account is <strong>pending verification</strong>. Patients will be able to connect once your documents are approved.

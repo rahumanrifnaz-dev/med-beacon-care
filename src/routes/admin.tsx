@@ -5,17 +5,12 @@ import { DashboardShell, Panel, StatCard } from "@/components/medi/DashboardShel
 import { useRequireRole } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getRoleNav } from "@/components/medi/RoleSidebar";
 
 export const Route = createFileRoute("/admin")({
   component: AdminDashboard,
   head: () => ({ meta: [{ title: "Admin · MediCare+" }] }),
 });
-
-const nav = [
-  { label: "Overview", to: "/admin", icon: ShieldCheck },
-  { label: "Pending verifications", to: "/admin", icon: ClipboardList },
-  { label: "All users", to: "/admin", icon: Users },
-];
 
 interface PendingRow {
   id: string;
@@ -122,7 +117,7 @@ function AdminDashboard() {
   }
 
   return (
-    <DashboardShell role="Super Admin" name={profile.full_name ?? "Admin"} nav={nav}>
+    <DashboardShell role={profile.role} name={profile.full_name ?? "Admin"} nav={getRoleNav(profile.role)}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Pending" value={String(stats.pending)} icon={ClipboardList} hint="Awaiting review" />
         <StatCard label="Approved" value={String(stats.approved)} icon={FileCheck2} hint="Verified pros" />

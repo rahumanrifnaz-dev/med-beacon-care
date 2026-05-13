@@ -6,18 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useRequireRole } from "@/lib/auth";
 import { toast } from "sonner";
 import { PILL_COLORS } from "@/lib/medications";
+import { getRoleNav } from "@/components/medi/RoleSidebar";
 
 export const Route = createFileRoute("/pharmacy")({
   component: PharmacyDashboard,
   head: () => ({ meta: [{ title: "Pharmacy · MediCare+" }] }),
 });
-
-const nav = [
-  { label: "Overview", to: "/pharmacy", icon: LayoutDashboard },
-  { label: "Scan QR", to: "/pharmacy/scan", icon: ScanLine },
-  { label: "Prescriptions", to: "/pharmacy", icon: Package },
-  { label: "Inventory", to: "/pharmacy", icon: Boxes },
-];
 
 function PharmacyDashboard() {
   const { profile } = useAuth();
@@ -158,7 +152,7 @@ function PharmacyDashboard() {
   const pending = profile.verification_status === "pending";
 
   return (
-    <DashboardShell role="Pharmacy Portal" name={profile.full_name?.split(" ")[0] ?? "Pharmacist"} nav={nav}>
+    <DashboardShell role={profile.role} name={profile.full_name?.split(" ")[0] ?? "Pharmacist"} nav={getRoleNav(profile.role)}>
       {pending && (
         <div className="rounded-2xl bg-warning/15 border border-warning/40 p-4 text-sm">
           Account is <strong>pending verification</strong>. You can still view prescriptions; dispensing is restricted until approved.
