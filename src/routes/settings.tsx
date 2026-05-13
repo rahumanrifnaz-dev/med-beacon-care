@@ -19,7 +19,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth as _useAuthForRefresh } from "@/lib/auth";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
