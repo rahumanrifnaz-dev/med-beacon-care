@@ -22,6 +22,10 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
 import { Route as LoginAdminRouteImport } from './routes/login_.admin'
+import { Route as DoctorPrescriptionsRouteImport } from './routes/doctor.prescriptions'
+import { Route as DoctorPendingRouteImport } from './routes/doctor.pending'
+import { Route as DoctorPatientsRouteImport } from './routes/doctor.patients'
+import { Route as DoctorMessagesRouteImport } from './routes/doctor.messages'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -88,11 +92,31 @@ const LoginAdminRoute = LoginAdminRouteImport.update({
   path: '/login/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DoctorPrescriptionsRoute = DoctorPrescriptionsRouteImport.update({
+  id: '/prescriptions',
+  path: '/prescriptions',
+  getParentRoute: () => DoctorRoute,
+} as any)
+const DoctorPendingRoute = DoctorPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => DoctorRoute,
+} as any)
+const DoctorPatientsRoute = DoctorPatientsRouteImport.update({
+  id: '/patients',
+  path: '/patients',
+  getParentRoute: () => DoctorRoute,
+} as any)
+const DoctorMessagesRoute = DoctorMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => DoctorRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/doctor': typeof DoctorRoute
+  '/doctor': typeof DoctorRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -101,13 +125,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/doctor/messages': typeof DoctorMessagesRoute
+  '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/pending': typeof DoctorPendingRoute
+  '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/doctor': typeof DoctorRoute
+  '/doctor': typeof DoctorRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -116,6 +144,10 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/doctor/messages': typeof DoctorMessagesRoute
+  '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/pending': typeof DoctorPendingRoute
+  '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
@@ -123,7 +155,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/doctor': typeof DoctorRoute
+  '/doctor': typeof DoctorRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
@@ -132,6 +164,10 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/doctor/messages': typeof DoctorMessagesRoute
+  '/doctor/patients': typeof DoctorPatientsRoute
+  '/doctor/pending': typeof DoctorPendingRoute
+  '/doctor/prescriptions': typeof DoctorPrescriptionsRoute
   '/login_/admin': typeof LoginAdminRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
@@ -149,6 +185,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/doctor/messages'
+    | '/doctor/patients'
+    | '/doctor/pending'
+    | '/doctor/prescriptions'
     | '/login/admin'
     | '/pharmacy/scan'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +204,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/doctor/messages'
+    | '/doctor/patients'
+    | '/doctor/pending'
+    | '/doctor/prescriptions'
     | '/login/admin'
     | '/pharmacy/scan'
   id:
@@ -179,6 +223,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/doctor/messages'
+    | '/doctor/patients'
+    | '/doctor/pending'
+    | '/doctor/prescriptions'
     | '/login_/admin'
     | '/pharmacy/scan'
   fileRoutesById: FileRoutesById
@@ -186,7 +234,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  DoctorRoute: typeof DoctorRoute
+  DoctorRoute: typeof DoctorRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -291,8 +339,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/doctor/prescriptions': {
+      id: '/doctor/prescriptions'
+      path: '/prescriptions'
+      fullPath: '/doctor/prescriptions'
+      preLoaderRoute: typeof DoctorPrescriptionsRouteImport
+      parentRoute: typeof DoctorRoute
+    }
+    '/doctor/pending': {
+      id: '/doctor/pending'
+      path: '/pending'
+      fullPath: '/doctor/pending'
+      preLoaderRoute: typeof DoctorPendingRouteImport
+      parentRoute: typeof DoctorRoute
+    }
+    '/doctor/patients': {
+      id: '/doctor/patients'
+      path: '/patients'
+      fullPath: '/doctor/patients'
+      preLoaderRoute: typeof DoctorPatientsRouteImport
+      parentRoute: typeof DoctorRoute
+    }
+    '/doctor/messages': {
+      id: '/doctor/messages'
+      path: '/messages'
+      fullPath: '/doctor/messages'
+      preLoaderRoute: typeof DoctorMessagesRouteImport
+      parentRoute: typeof DoctorRoute
+    }
   }
 }
+
+interface DoctorRouteChildren {
+  DoctorMessagesRoute: typeof DoctorMessagesRoute
+  DoctorPatientsRoute: typeof DoctorPatientsRoute
+  DoctorPendingRoute: typeof DoctorPendingRoute
+  DoctorPrescriptionsRoute: typeof DoctorPrescriptionsRoute
+}
+
+const DoctorRouteChildren: DoctorRouteChildren = {
+  DoctorMessagesRoute: DoctorMessagesRoute,
+  DoctorPatientsRoute: DoctorPatientsRoute,
+  DoctorPendingRoute: DoctorPendingRoute,
+  DoctorPrescriptionsRoute: DoctorPrescriptionsRoute,
+}
+
+const DoctorRouteWithChildren =
+  DoctorRoute._addFileChildren(DoctorRouteChildren)
 
 interface PharmacyRouteChildren {
   PharmacyScanRoute: typeof PharmacyScanRoute
@@ -309,7 +402,7 @@ const PharmacyRouteWithChildren = PharmacyRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  DoctorRoute: DoctorRoute,
+  DoctorRoute: DoctorRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
