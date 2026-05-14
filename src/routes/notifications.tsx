@@ -149,7 +149,7 @@ function NotificationsPage() {
 
   const openNotification = async (n: Notification) => {
     if (!n.read) await markAsRead(n.id);
-    if (n.action_url) navigate({ to: n.action_url });
+    if (n.action_url) navigate({ to: n.action_url as any });
   };
 
   const markAsRead = async (id: string) => {
