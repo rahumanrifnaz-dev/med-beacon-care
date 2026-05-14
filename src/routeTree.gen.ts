@@ -20,6 +20,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PharmacyStockRouteImport } from './routes/pharmacy.stock'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
 import { Route as PharmacyPrescriptionsRouteImport } from './routes/pharmacy.prescriptions'
 import { Route as PharmacyMessagesRouteImport } from './routes/pharmacy.messages'
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PharmacyStockRoute = PharmacyStockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => PharmacyRoute,
 } as any)
 const PharmacyScanRoute = PharmacyScanRouteImport.update({
   id: '/scan',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/pharmacy/messages': typeof PharmacyMessagesRoute
   '/pharmacy/prescriptions': typeof PharmacyPrescriptionsRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
+  '/pharmacy/stock': typeof PharmacyStockRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/pharmacy/messages': typeof PharmacyMessagesRoute
   '/pharmacy/prescriptions': typeof PharmacyPrescriptionsRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
+  '/pharmacy/stock': typeof PharmacyStockRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/pharmacy/messages': typeof PharmacyMessagesRoute
   '/pharmacy/prescriptions': typeof PharmacyPrescriptionsRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
+  '/pharmacy/stock': typeof PharmacyStockRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/pharmacy/messages'
     | '/pharmacy/prescriptions'
     | '/pharmacy/scan'
+    | '/pharmacy/stock'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/pharmacy/messages'
     | '/pharmacy/prescriptions'
     | '/pharmacy/scan'
+    | '/pharmacy/stock'
   id:
     | '__root__'
     | '/'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/pharmacy/messages'
     | '/pharmacy/prescriptions'
     | '/pharmacy/scan'
+    | '/pharmacy/stock'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/pharmacy/stock': {
+      id: '/pharmacy/stock'
+      path: '/stock'
+      fullPath: '/pharmacy/stock'
+      preLoaderRoute: typeof PharmacyStockRouteImport
+      parentRoute: typeof PharmacyRoute
     }
     '/pharmacy/scan': {
       id: '/pharmacy/scan'
@@ -563,6 +582,7 @@ interface PharmacyRouteChildren {
   PharmacyMessagesRoute: typeof PharmacyMessagesRoute
   PharmacyPrescriptionsRoute: typeof PharmacyPrescriptionsRoute
   PharmacyScanRoute: typeof PharmacyScanRoute
+  PharmacyStockRoute: typeof PharmacyStockRoute
 }
 
 const PharmacyRouteChildren: PharmacyRouteChildren = {
@@ -570,6 +590,7 @@ const PharmacyRouteChildren: PharmacyRouteChildren = {
   PharmacyMessagesRoute: PharmacyMessagesRoute,
   PharmacyPrescriptionsRoute: PharmacyPrescriptionsRoute,
   PharmacyScanRoute: PharmacyScanRoute,
+  PharmacyStockRoute: PharmacyStockRoute,
 }
 
 const PharmacyRouteWithChildren = PharmacyRoute._addFileChildren(
