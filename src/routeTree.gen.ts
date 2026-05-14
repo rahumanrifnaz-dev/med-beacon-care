@@ -21,7 +21,9 @@ import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PharmacyScanRouteImport } from './routes/pharmacy.scan'
+import { Route as PharmacyPrescriptionsRouteImport } from './routes/pharmacy.prescriptions'
 import { Route as PharmacyMessagesRouteImport } from './routes/pharmacy.messages'
+import { Route as PharmacyMedicinesRouteImport } from './routes/pharmacy.medicines'
 import { Route as PatientScanQrRouteImport } from './routes/patient.scan-qr'
 import { Route as PatientPrescriptionsRouteImport } from './routes/patient.prescriptions'
 import { Route as PatientMessagesRouteImport } from './routes/patient.messages'
@@ -93,9 +95,19 @@ const PharmacyScanRoute = PharmacyScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => PharmacyRoute,
 } as any)
+const PharmacyPrescriptionsRoute = PharmacyPrescriptionsRouteImport.update({
+  id: '/prescriptions',
+  path: '/prescriptions',
+  getParentRoute: () => PharmacyRoute,
+} as any)
 const PharmacyMessagesRoute = PharmacyMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => PharmacyRoute,
+} as any)
+const PharmacyMedicinesRoute = PharmacyMedicinesRouteImport.update({
+  id: '/medicines',
+  path: '/medicines',
   getParentRoute: () => PharmacyRoute,
 } as any)
 const PatientScanQrRoute = PatientScanQrRouteImport.update({
@@ -171,7 +183,9 @@ export interface FileRoutesByFullPath {
   '/patient/messages': typeof PatientMessagesRoute
   '/patient/prescriptions': typeof PatientPrescriptionsRoute
   '/patient/scan-qr': typeof PatientScanQrRoute
+  '/pharmacy/medicines': typeof PharmacyMedicinesRoute
   '/pharmacy/messages': typeof PharmacyMessagesRoute
+  '/pharmacy/prescriptions': typeof PharmacyPrescriptionsRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesByTo {
@@ -196,7 +210,9 @@ export interface FileRoutesByTo {
   '/patient/messages': typeof PatientMessagesRoute
   '/patient/prescriptions': typeof PatientPrescriptionsRoute
   '/patient/scan-qr': typeof PatientScanQrRoute
+  '/pharmacy/medicines': typeof PharmacyMedicinesRoute
   '/pharmacy/messages': typeof PharmacyMessagesRoute
+  '/pharmacy/prescriptions': typeof PharmacyPrescriptionsRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRoutesById {
@@ -222,7 +238,9 @@ export interface FileRoutesById {
   '/patient/messages': typeof PatientMessagesRoute
   '/patient/prescriptions': typeof PatientPrescriptionsRoute
   '/patient/scan-qr': typeof PatientScanQrRoute
+  '/pharmacy/medicines': typeof PharmacyMedicinesRoute
   '/pharmacy/messages': typeof PharmacyMessagesRoute
+  '/pharmacy/prescriptions': typeof PharmacyPrescriptionsRoute
   '/pharmacy/scan': typeof PharmacyScanRoute
 }
 export interface FileRouteTypes {
@@ -249,7 +267,9 @@ export interface FileRouteTypes {
     | '/patient/messages'
     | '/patient/prescriptions'
     | '/patient/scan-qr'
+    | '/pharmacy/medicines'
     | '/pharmacy/messages'
+    | '/pharmacy/prescriptions'
     | '/pharmacy/scan'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -274,7 +294,9 @@ export interface FileRouteTypes {
     | '/patient/messages'
     | '/patient/prescriptions'
     | '/patient/scan-qr'
+    | '/pharmacy/medicines'
     | '/pharmacy/messages'
+    | '/pharmacy/prescriptions'
     | '/pharmacy/scan'
   id:
     | '__root__'
@@ -299,7 +321,9 @@ export interface FileRouteTypes {
     | '/patient/messages'
     | '/patient/prescriptions'
     | '/patient/scan-qr'
+    | '/pharmacy/medicines'
     | '/pharmacy/messages'
+    | '/pharmacy/prescriptions'
     | '/pharmacy/scan'
   fileRoutesById: FileRoutesById
 }
@@ -404,11 +428,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PharmacyScanRouteImport
       parentRoute: typeof PharmacyRoute
     }
+    '/pharmacy/prescriptions': {
+      id: '/pharmacy/prescriptions'
+      path: '/prescriptions'
+      fullPath: '/pharmacy/prescriptions'
+      preLoaderRoute: typeof PharmacyPrescriptionsRouteImport
+      parentRoute: typeof PharmacyRoute
+    }
     '/pharmacy/messages': {
       id: '/pharmacy/messages'
       path: '/messages'
       fullPath: '/pharmacy/messages'
       preLoaderRoute: typeof PharmacyMessagesRouteImport
+      parentRoute: typeof PharmacyRoute
+    }
+    '/pharmacy/medicines': {
+      id: '/pharmacy/medicines'
+      path: '/medicines'
+      fullPath: '/pharmacy/medicines'
+      preLoaderRoute: typeof PharmacyMedicinesRouteImport
       parentRoute: typeof PharmacyRoute
     }
     '/patient/scan-qr': {
@@ -521,12 +559,16 @@ const PatientRouteWithChildren =
   PatientRoute._addFileChildren(PatientRouteChildren)
 
 interface PharmacyRouteChildren {
+  PharmacyMedicinesRoute: typeof PharmacyMedicinesRoute
   PharmacyMessagesRoute: typeof PharmacyMessagesRoute
+  PharmacyPrescriptionsRoute: typeof PharmacyPrescriptionsRoute
   PharmacyScanRoute: typeof PharmacyScanRoute
 }
 
 const PharmacyRouteChildren: PharmacyRouteChildren = {
+  PharmacyMedicinesRoute: PharmacyMedicinesRoute,
   PharmacyMessagesRoute: PharmacyMessagesRoute,
+  PharmacyPrescriptionsRoute: PharmacyPrescriptionsRoute,
   PharmacyScanRoute: PharmacyScanRoute,
 }
 
@@ -551,3 +593,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
