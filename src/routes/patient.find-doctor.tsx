@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DashboardShell, Panel } from "@/components/medi/DashboardShell";
-import { useAuth, useRequireRole, useRequireAuth } from "@/lib/auth";
+import { useAuth, useRequireRole } from "@/lib/auth";
 import { getRoleNav } from "@/components/medi/RoleSidebar";
 import { Stethoscope, Check } from "lucide-react";
 import { useEffect, useState } from "react";
