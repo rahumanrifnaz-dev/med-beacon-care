@@ -347,3 +347,39 @@ function formatTime(dateString: string): string {
 
   return date.toLocaleDateString();
 }
+
+function mapNotificationType(t: string | null | undefined): Notification["type"] {
+  switch (t) {
+    case "prescription_dispensed":
+    case "verification":
+      return "success";
+    case "patient_disconnected":
+      return "warning";
+    default:
+      return "info";
+  }
+}
+
+function actionUrlFor(t: string | null | undefined, role: string): string | undefined {
+  switch (t) {
+    case "new_prescription":
+    case "prescription_dispensed":
+      return role === "patient" ? "/patient/prescriptions" : undefined;
+    case "new_prescription_pharmacy":
+      return role === "pharmacist" ? "/pharmacy/prescriptions" : undefined;
+    case "patient_connected":
+    case "patient_disconnected":
+      return role === "doctor" ? "/doctor/patients" : undefined;
+    case "doctor_logged":
+      return role === "patient" ? "/patient/adherence" : undefined;
+    case "message":
+      if (role === "patient") return "/patient/messages";
+      if (role === "doctor") return "/doctor/messages";
+      if (role === "pharmacist") return "/pharmacy/messages";
+      return undefined;
+    case "verification":
+      return "/settings";
+    default:
+      return undefined;
+  }
+}
