@@ -26,7 +26,7 @@ export function DashboardShell({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="min-h-screen flex">
@@ -82,9 +82,13 @@ export function DashboardShell({
             <Link to="/settings" className="p-2 rounded-xl hover:bg-secondary/60 transition-colors">
               <Settings className="w-5 h-5" />
             </Link>
-            <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-sm font-semibold ml-2">
-              {name[0]}
-            </div>
+            <Link to="/settings" className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-sm font-semibold ml-2 overflow-hidden shrink-0" aria-label="Profile">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                name[0]
+              )}
+            </Link>
           </div>
         </header>
         {/* Mobile nav overlay */}

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { DashboardShell } from "@/components/medi/DashboardShell";
 import { useAuth, useRequireRole } from "@/lib/auth";
 import { getRoleNav } from "@/components/medi/RoleSidebar";
@@ -70,6 +71,7 @@ const mockNotifications: Notification[] = [
 function NotificationsPage() {
   const { profile } = useAuth();
   useRequireRole(["patient", "doctor", "pharmacist", "admin"]);
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
@@ -88,12 +90,12 @@ function NotificationsPage() {
       if (active) {
         setNotifications((data ?? []).map((n: any) => ({
           id: n.id,
-          type: 'info',
+          type: mapNotificationType(n.type),
           title: n.title,
           message: n.body ?? '',
           created_at: n.created_at,
           read: !!n.read_at,
-          action_url: undefined,
+          action_url: actionUrlFor(n.type, profile.role),
         })));
       }
     };
@@ -113,12 +115,12 @@ function NotificationsPage() {
             if (ev === 'INSERT') {
               const n = {
                 id: record.id,
-                type: 'info',
+                type: mapNotificationType(record.type),
                 title: record.title,
                 message: record.body ?? '',
                 created_at: record.created_at,
                 read: !!record.read_at,
-                action_url: undefined,
+                action_url: actionUrlFor(record.type, profile.role),
               } as Notification;
               return [n, ...prev];
             }
@@ -144,6 +146,11 @@ function NotificationsPage() {
 
   const nav = getRoleNav(profile.role);
   const filteredNotifications = filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
+
+  const openNotification = async (n: Notification) => {
+    if (!n.read) await markAsRead(n.id);
+    if (n.action_url) navigate({ to: n.action_url as any });
+  };
 
   const markAsRead = async (id: string) => {
     const ts = new Date().toISOString();
@@ -279,8 +286,8 @@ function NotificationsPage() {
                 className={`p-4 rounded-lg transition-all ${getNotificationBgClass(
                   notification.type,
                   notification.read
-                )} ${!notification.read ? "cursor-pointer" : ""}`}
-                onClick={() => !notification.read && markAsRead(notification.id)}
+                )} cursor-pointer hover:bg-secondary/40`}
+                onClick={() => openNotification(notification)}
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-1">{getNotificationIcon(notification.type)}</div>
@@ -309,12 +316,9 @@ function NotificationsPage() {
                         {formatTime(notification.created_at)}
                       </span>
                       {notification.action_url && (
-                        <a
-                          href={notification.action_url}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
+                        <span className="text-xs font-medium text-primary">
                           View Details →
-                        </a>
+                        </span>
                       )}
                     </div>
                   </div>
@@ -342,4 +346,40 @@ function formatTime(dateString: string): string {
   if (diffDays < 7) return `${diffDays}d ago`;
 
   return date.toLocaleDateString();
+}
+
+function mapNotificationType(t: string | null | undefined): Notification["type"] {
+  switch (t) {
+    case "prescription_dispensed":
+    case "verification":
+      return "success";
+    case "patient_disconnected":
+      return "warning";
+    default:
+      return "info";
+  }
+}
+
+function actionUrlFor(t: string | null | undefined, role: string): string | undefined {
+  switch (t) {
+    case "new_prescription":
+    case "prescription_dispensed":
+      return role === "patient" ? "/patient/prescriptions" : undefined;
+    case "new_prescription_pharmacy":
+      return role === "pharmacist" ? "/pharmacy/prescriptions" : undefined;
+    case "patient_connected":
+    case "patient_disconnected":
+      return role === "doctor" ? "/doctor/patients" : undefined;
+    case "doctor_logged":
+      return role === "patient" ? "/patient/adherence" : undefined;
+    case "message":
+      if (role === "patient") return "/patient/messages";
+      if (role === "doctor") return "/doctor/messages";
+      if (role === "pharmacist") return "/pharmacy/messages";
+      return undefined;
+    case "verification":
+      return "/settings";
+    default:
+      return undefined;
+  }
 }
