@@ -35,6 +35,7 @@ import { Route as DoctorPrescriptionsRouteImport } from './routes/doctor.prescri
 import { Route as DoctorPendingRouteImport } from './routes/doctor.pending'
 import { Route as DoctorPatientsRouteImport } from './routes/doctor.patients'
 import { Route as DoctorMessagesRouteImport } from './routes/doctor.messages'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -166,10 +167,15 @@ const DoctorMessagesRoute = DoctorMessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => DoctorRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/doctor': typeof DoctorRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/admin/users': typeof AdminUsersRoute
   '/doctor/messages': typeof DoctorMessagesRoute
   '/doctor/patients': typeof DoctorPatientsRoute
   '/doctor/pending': typeof DoctorPendingRoute
@@ -197,7 +204,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/doctor': typeof DoctorRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/admin/users': typeof AdminUsersRoute
   '/doctor/messages': typeof DoctorMessagesRoute
   '/doctor/patients': typeof DoctorPatientsRoute
   '/doctor/pending': typeof DoctorPendingRoute
@@ -226,7 +234,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/doctor': typeof DoctorRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/admin/users': typeof AdminUsersRoute
   '/doctor/messages': typeof DoctorMessagesRoute
   '/doctor/patients': typeof DoctorPatientsRoute
   '/doctor/pending': typeof DoctorPendingRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/admin/users'
     | '/doctor/messages'
     | '/doctor/patients'
     | '/doctor/pending'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/admin/users'
     | '/doctor/messages'
     | '/doctor/patients'
     | '/doctor/pending'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/admin/users'
     | '/doctor/messages'
     | '/doctor/patients'
     | '/doctor/pending'
@@ -341,7 +353,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   DoctorRoute: typeof DoctorRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -538,8 +550,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DoctorMessagesRouteImport
       parentRoute: typeof DoctorRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminUsersRoute: typeof AdminUsersRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminUsersRoute: AdminUsersRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface DoctorRouteChildren {
   DoctorMessagesRoute: typeof DoctorMessagesRoute
@@ -599,7 +628,7 @@ const PharmacyRouteWithChildren = PharmacyRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   DoctorRoute: DoctorRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
