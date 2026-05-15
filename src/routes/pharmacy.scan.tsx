@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { supabase } from "@/integrations/supabase/client";
-import { useRequireRole } from "@/lib/auth";
+import { useAuth, useRequireRole } from "@/lib/auth";
 import { Logo } from "@/components/medi/Logo";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, CheckCircle2, Package, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pharmacy/scan")({
@@ -14,11 +14,13 @@ export const Route = createFileRoute("/pharmacy/scan")({
 
 function ScanPage() {
   useRequireRole("pharmacist");
+  const { profile } = useAuth();
   const nav = useNavigate();
   const ref = useRef<Html5Qrcode | null>(null);
   const [result, setResult] = useState<any | null>(null);
   const [medicineDetails, setMedicineDetails] = useState<any[]>([]);
   const [doctor, setDoctor] = useState<any | null>(null);
+  const [stockOk, setStockOk] = useState<boolean[]>([]);
 
   const loadPrescription = async (qrToken: string) => {
     const { data: prescription, error } = await supabase
@@ -73,9 +75,27 @@ function ScanPage() {
     
     setMedicineDetails(enriched);
 
-    // Load doctor info
-    const { data: doctorData } = await supabase.from("profiles").select("full_name").eq("id", prescription.doctor_id).maybeSingle();
+    // Load doctor info (with role/credentials)
+    const { data: doctorData } = await supabase.from("profiles").select("full_name, role, phone").eq("id", prescription.doctor_id).maybeSingle();
     setDoctor(doctorData);
+
+    // Stock check
+    if (profile) {
+      const { data: avail } = await supabase.from("pharmacy_availability").select("medicines").eq("pharmacist_id", profile.id).maybeSingle();
+      const inStock = (avail?.medicines as string[]) ?? [];
+      setStockOk(enriched.map((it: any) => it.medicine_id ? inStock.includes(it.medicine_id) : false));
+    }
+  };
+
+  const updateStatus = async (status: "verified" | "dispensed") => {
+    if (!result || !profile) return;
+    const patch: any = { status };
+    if (status === "verified") { patch.verified_by = profile.id; patch.verified_at = new Date().toISOString(); }
+    if (status === "dispensed") { patch.pharmacist_id = profile.id; patch.dispensed_at = new Date().toISOString(); }
+    const { error } = await supabase.from("prescriptions").update(patch).eq("id", result.id);
+    if (error) return toast.error(error.message);
+    toast.success(status === "verified" ? "Marked as verified" : "Distributed — patient & doctor notified");
+    setResult({ ...result, ...patch });
   };
 
   useEffect(() => {
@@ -114,7 +134,11 @@ function ScanPage() {
         <div className="mt-6 glass rounded-2xl p-8 print:bg-white print:text-black">
           {/* Header */}
           <div className="mb-6 print:mb-4">
-            <p className="text-xs uppercase tracking-widest text-primary-glow print:text-gray-600">Prescription from {doctor?.full_name || 'Doctor'}</p>
+            <p className="text-xs uppercase tracking-widest text-primary-glow print:text-gray-600">
+              Prescription from Dr. {doctor?.full_name || 'Doctor'}
+              {doctor?.role && <span className="ml-2 opacity-70">· {doctor.role}</span>}
+            </p>
+            {doctor?.phone && <p className="text-xs text-muted-foreground mt-0.5">Contact: {doctor.phone}</p>}
             <h2 className="font-display text-2xl font-bold mt-2">Rx Prescription</h2>
           </div>
 
@@ -154,7 +178,14 @@ function ScanPage() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-bold text-base">{item.med}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-base">{item.med}</p>
+                      {stockOk[i] ? (
+                        <span className="text-xs inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/20 text-success print:hidden"><CheckCircle2 className="w-3 h-3" />In stock</span>
+                      ) : (
+                        <span className="text-xs inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/20 text-destructive print:hidden"><XCircle className="w-3 h-3" />Out of stock</span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground print:text-gray-700 mt-1">
                       <span className="font-semibold">Dosage:</span> {item.dose}
                     </p>
@@ -169,6 +200,18 @@ function ScanPage() {
 
           {/* Actions */}
           <div className="flex gap-3 mt-8 print:hidden">
+            {result.status !== "dispensed" && (
+              <>
+                {result.status === "issued" && (
+                  <button onClick={() => updateStatus("verified")} className="flex items-center gap-2 bg-secondary/60 px-4 py-2 rounded-xl text-sm font-medium hover:bg-secondary">
+                    <CheckCircle2 className="w-4 h-4" /> Verify
+                  </button>
+                )}
+                <button onClick={() => updateStatus("dispensed")} className="flex items-center gap-2 bg-gradient-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium shadow-glow">
+                  <Package className="w-4 h-4" /> Mark distributed
+                </button>
+              </>
+            )}
             <button onClick={() => window.print()} className="flex items-center gap-2 flex-1 bg-gradient-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium shadow-glow">
               <Printer className="w-4 h-4" /> Print / Save as PDF
             </button>
