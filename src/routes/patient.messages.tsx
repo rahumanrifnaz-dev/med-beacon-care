@@ -58,6 +58,16 @@ function PatientMessages() {
   const deleteMessage = async (messageId: string) => {
     setDeleting(messageId);
     try {
+      const msg = messages.find((m) => m.id === messageId);
+      if (!msg) {
+        toast.error("Message not found");
+        return;
+      }
+      if (msg.sender_id !== user?.id) {
+        toast.error("You can only delete your own messages");
+        return;
+      }
+
       const { error } = await supabase
         .from("messages")
         .delete()
@@ -98,11 +108,29 @@ function PatientMessages() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !user || !doctorId) return;
 
+    // Basic server-side style validation: limit message length
+    const content = newMessage.trim().slice(0, 2000);
+
     try {
+      // Rate-limit: allow max 5 messages per 30 seconds per sender
+      const since = new Date(Date.now() - 30 * 1000).toISOString();
+      const { count, error: countErr } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("sender_id", user.id)
+        .gt("created_at", since);
+
+      if (countErr) {
+        console.error("Failed to check message rate:", countErr);
+      } else if ((count ?? 0) >= 5) {
+        toast.error("You're sending messages too quickly. Please wait a moment.");
+        return;
+      }
+
       const { error } = await supabase.from("messages").insert({
         sender_id: user.id,
         receiver_id: doctorId,
-        content: newMessage,
+        content,
       });
 
       if (error) throw error;

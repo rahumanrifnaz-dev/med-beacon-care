@@ -34,7 +34,7 @@ export function DashboardShell({
         <div className="p-6">
           <Logo />
         </div>
-        <nav className="flex-1 px-3 space-y-1">
+        <nav aria-label="Primary sidebar" className="flex-1 px-3 space-y-1">
           {nav.map((item, i) => {
             const active = location.pathname === item.to || location.pathname.startsWith(item.to + "/");
             const Icon = item.icon;
@@ -48,6 +48,7 @@ export function DashboardShell({
                     ? "bg-gradient-primary text-primary-foreground shadow-glow"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                 }`}
+                aria-current={active ? "page" : undefined}
               >
                 <Icon className="w-4 h-4" />
                 {item.label}
@@ -102,7 +103,7 @@ export function DashboardShell({
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <nav className="space-y-2">
+              <nav aria-label="Primary sidebar" className="space-y-2">
                 {nav.map((item, i) => {
                   const active = location.pathname === item.to || location.pathname.startsWith(item.to + "/");
                   const Icon = item.icon;
@@ -119,6 +120,7 @@ export function DashboardShell({
                           ? "bg-gradient-primary text-primary-foreground shadow-glow"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                       }`}
+                      aria-current={active ? "page" : undefined}
                     >
                       <Icon className="w-4 h-4" />
                       {item.label}

@@ -18,17 +18,24 @@ CREATE POLICY "Messages: own send/receive" ON public.messages FOR ALL
 CREATE POLICY "Messages: delete own" ON public.messages FOR DELETE
   USING (sender_id = auth.uid());
 
--- Function to create notification when message is sent
+-- Hardened function to create notification when message is sent.
+-- Any failures inside the notification insert are caught so the parent
+-- messages insert is not aborted by a notification failure.
 CREATE OR REPLACE FUNCTION notify_message_received()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.notifications (user_id, type, title, body)
-  VALUES (
-    NEW.receiver_id,
-    'message',
-    'New Message',
-    'You have a new message from your care team'
-  );
+  BEGIN
+    INSERT INTO public.notifications (user_id, type, title, body)
+    VALUES (
+      NEW.receiver_id,
+      'message',
+      'New Message',
+      'You have a new message from your care team'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    -- Swallow errors from notifications to avoid breaking the main transaction.
+    RAISE NOTICE 'notify_message_received failed: %', SQLERRM;
+  END;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
