@@ -45,9 +45,7 @@ interface EnrichedRx extends Rx {
 function PatientDashboard() {
   const { profile, refreshProfile } = useAuth();
   const location = useLocation();
-  if (location.pathname !== "/patient") {
-    return <Outlet />;
-  }
+  const isPatientRoot = location.pathname === "/patient";
   useRequireRole("patient");
   const [meds, setMeds] = useState<Med[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -146,6 +144,7 @@ function PatientDashboard() {
   const adherence = totalToday ? Math.round((takenCount / totalToday) * 100) : 100;
 
   if (!profile) return null;
+  if (!isPatientRoot) return <Outlet />;
 
   return (
     <>

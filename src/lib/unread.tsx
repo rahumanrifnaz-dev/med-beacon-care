@@ -42,6 +42,14 @@ export function useUnreadCounts(userId?: string | null) {
 
     void loadCounts();
 
+    // remove any existing channel for this user to avoid adding callbacks after subscribe()
+    try {
+      const existing = supabase.getChannels?.().find((c: any) => String(c.topic).includes(`unread:${userId}`));
+      if (existing) supabase.removeChannel(existing);
+    } catch (e) {
+      // ignore; getChannels may not be available in some runtime environments
+    }
+
     const channel = supabase
       .channel(`unread:${userId}`)
       .on(

@@ -107,7 +107,7 @@ function NotificationsPage() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}` },
-        (payload) => {
+        (payload: any) => {
           const ev = payload.eventType;
           const record = (payload.new ?? payload.old) as any;
           if (!record) return;
