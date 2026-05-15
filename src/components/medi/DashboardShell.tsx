@@ -4,6 +4,7 @@ import { Logo } from "./Logo";
 import { Bell, LogOut, Settings, Menu, X, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useUnreadCounts } from "@/lib/unread";
 import { useState } from "react";
 import { NotificationBell } from "./NotificationBell";
 
@@ -27,6 +28,7 @@ export function DashboardShell({
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, profile } = useAuth();
+  const { unreadNotifications, unreadMessages } = useUnreadCounts(profile?.id ?? null);
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="min-h-screen flex">
@@ -51,7 +53,20 @@ export function DashboardShell({
                 aria-current={active ? "page" : undefined}
               >
                 <Icon className="w-4 h-4" />
-                {item.label}
+                <div className="flex items-center gap-2">
+                  <span>{item.label}</span>
+                  {/* badges for messages / notifications */}
+                  {item.to === "/notifications" && unreadNotifications > 0 && (
+                    <span className="px-1 rounded-full bg-accent text-accent-foreground font-bold text-[10px]" style={{ minWidth: 18, height: 18 }}>
+                      {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                    </span>
+                  )}
+                  {item.to.endsWith("/messages") && unreadMessages > 0 && (
+                    <span className="px-1 rounded-full bg-accent text-accent-foreground font-bold text-[10px]" style={{ minWidth: 18, height: 18 }}>
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}
@@ -123,7 +138,19 @@ export function DashboardShell({
                       aria-current={active ? "page" : undefined}
                     >
                       <Icon className="w-4 h-4" />
-                      {item.label}
+                        <div className="flex items-center gap-2">
+                          <span>{item.label}</span>
+                          {item.to === "/notifications" && unreadNotifications > 0 && (
+                            <span className="px-1 rounded-full bg-accent text-accent-foreground font-bold text-[10px]" style={{ minWidth: 18, height: 18 }}>
+                              {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                            </span>
+                          )}
+                          {item.to.endsWith("/messages") && unreadMessages > 0 && (
+                            <span className="px-1 rounded-full bg-accent text-accent-foreground font-bold text-[10px]" style={{ minWidth: 18, height: 18 }}>
+                              {unreadMessages > 99 ? "99+" : unreadMessages}
+                            </span>
+                          )}
+                        </div>
                     </Link>
                   );
                 })}

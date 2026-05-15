@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import type { Session, User } from "@supabase/supabase-js";
+type Session = any;
+type User = any;
 
 export type AppRole = "patient" | "doctor" | "pharmacist" | "admin";
 
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (uid: string, attempt = 0) => {
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+    const { data, error } = await supabase.from<any>("profiles").select("*").eq("id", uid).maybeSingle();
 
     if (error) {
       const message = error.message?.toLowerCase() ?? "";
@@ -63,7 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!shouldRetry) {
-        console.error(error);
+        // centralized error capture
+        try {
+          const { captureError } = await import("./logging");
+          captureError(error);
+        } catch {
+          // fallback
+          console.error(error);
+        }
       }
 
       setProfile(null);
@@ -74,19 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e: string, s: any) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) setTimeout(() => void loadProfile(s.user.id), 0);
       else setProfile(null);
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: any) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       if (data.session?.user) void loadProfile(data.session.user.id).finally(() => setLoading(false));
       else setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+    return () => sub?.subscription?.unsubscribe?.();
   }, []);
 
   const signOut = async () => {

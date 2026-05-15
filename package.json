@@ -9,7 +9,11 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:unit": "vitest",
+    "test:e2e": "playwright test",
+    "test": "pnpm -w -s test:unit && pnpm -w -s test:e2e",
+    "ci": "pnpm install && pnpm build && pnpm lint && pnpm test"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -87,5 +91,10 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
+    "vitest": "^1.2.10",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "jsdom": "^22.1.0",
+    "@playwright/test": "^1.40.0"
   }
 }

@@ -426,6 +426,31 @@ function NotificationSettings() {
     toast.success("Notification preferences updated");
   };
 
+  // Push subscription state
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  const togglePush = async () => {
+    if (!pushEnabled) {
+      try {
+        const vapid = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
+        if (!vapid) return toast.error('VAPID key not configured');
+        await import('@/lib/push').then(m => m.subscribeToPush(vapid));
+        setPushEnabled(true);
+        toast.success('Push notifications enabled');
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to enable push');
+      }
+    } else {
+      try {
+        await import('@/lib/push').then(m => m.unsubscribeFromPush());
+        setPushEnabled(false);
+        toast.success('Push notifications disabled');
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to disable push');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -449,8 +474,8 @@ function NotificationSettings() {
           <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/20 cursor-pointer">
             <input
               type="checkbox"
-              checked={pushNotifications}
-              onChange={(e) => setPushNotifications(e.target.checked)}
+              checked={pushEnabled}
+              onChange={togglePush}
               className="w-4 h-4 rounded border-border"
             />
             <div>
