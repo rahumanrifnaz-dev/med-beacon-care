@@ -28,6 +28,7 @@ function DoctorDashboard() {
   const [rxs, setRxs] = useState<any[]>([]);
   const [newRx, setNewRx] = useState<{ med: string; dose: string; freq: string }[]>([]);
   const [pharmacyMeds, setPharmacyMeds] = useState<any[]>([]);
+  const [reqMed, setReqMed] = useState({ name: "", dosage: "", notes: "" });
 
   const loadPatients = async () => {
     if (!profile) return;
@@ -93,6 +94,17 @@ function DoctorDashboard() {
     });
     toast.success("Prescription deleted");
     loadPatient(selected);
+  };
+
+  const submitMedicineRequest = async () => {
+    if (!profile || !reqMed.name.trim()) return;
+    const { error } = await supabase.from("medicine_requests").insert({
+      doctor_id: profile.id, medicine_name: reqMed.name.trim(),
+      dosage: reqMed.dosage.trim() || null, notes: reqMed.notes.trim() || null,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Request broadcast to all pharmacists");
+    setReqMed({ name: "", dosage: "", notes: "" });
   };
 
   if (!profile) return null;
@@ -167,6 +179,15 @@ function DoctorDashboard() {
           )}
         </Panel>
       )}
+
+      <Panel title="Request a medicine" subtitle="Broadcast to all pharmacists if an item isn't in the system">
+        <div className="grid sm:grid-cols-3 gap-2">
+          <input value={reqMed.name} onChange={(e) => setReqMed({ ...reqMed, name: e.target.value })} placeholder="Medicine name" className="bg-input/60 border border-border/60 rounded-xl px-3 py-2 text-sm" />
+          <input value={reqMed.dosage} onChange={(e) => setReqMed({ ...reqMed, dosage: e.target.value })} placeholder="Dosage (optional)" className="bg-input/60 border border-border/60 rounded-xl px-3 py-2 text-sm" />
+          <input value={reqMed.notes} onChange={(e) => setReqMed({ ...reqMed, notes: e.target.value })} placeholder="Notes (optional)" className="bg-input/60 border border-border/60 rounded-xl px-3 py-2 text-sm" />
+        </div>
+        <button onClick={submitMedicineRequest} disabled={!reqMed.name.trim()} className="mt-3 bg-gradient-primary text-primary-foreground px-4 py-2 rounded-xl shadow-glow text-sm font-medium disabled:opacity-50">Broadcast request</button>
+      </Panel>
     </DashboardShell>
   );
 }

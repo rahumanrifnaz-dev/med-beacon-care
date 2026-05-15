@@ -1,37 +1,41 @@
-## Plan: RBAC sidebar, real-time notifications, profile management
+## Goal
+Tie Doctor → Patient → Pharmacist together with real-time status, stock visibility, emergency medicine broadcasts, and patient reminders triggered on dispense.
 
-Most of this stack already exists (profiles + role enum + user_roles + RLS + admin panel + notifications table). I'll fill the missing pieces:
+## Database changes (one migration)
 
-### 1. Storage — avatars bucket
-New migration:
-- Create public `avatars` bucket
-- RLS on `storage.objects`: public SELECT; authenticated users can INSERT/UPDATE/DELETE only files under a folder named with their `auth.uid()`
+1. **`prescriptions` extensions**
+   - Add `verified_at timestamptz`, `verified_by uuid` (pharmacist who scanned).
+   - Extend `prescription_status` enum: keep `issued`, `dispensed`; add `verified`.
+   - Trigger: when status flips to `dispensed`, auto-create `medications` rows from `items` for the patient (so reminders activate only after pickup) and notify doctor with pharmacist name.
 
-### 2. Dynamic sidebar (permissions map)
-Refactor `src/components/medi/RoleSidebar.tsx` to a single `MENU_ITEMS` array with `roles: AppRole[]`, then filter by current user's role. Update `DashboardShell` consumers (patient/doctor/pharmacy/admin pages) to use the new helper. Sidebar already hides links the user can't see; 404s handled by existing `notFoundComponent`.
+2. **`medicine_requests`** (emergency requests)
+   - `id, doctor_id, medicine_name, dosage, notes, status (open/fulfilled), created_at, fulfilled_by, fulfilled_at`.
+   - RLS: doctors insert/read own; pharmacists read all + update.
+   - Trigger on insert → broadcast notification to every pharmacist.
 
-### 3. Real-time notification bell
-New `src/components/medi/NotificationBell.tsx`:
-- Loads unread count for current user
-- Subscribes to `postgres_changes` on `notifications` filtered by `user_id=eq.{uid}`
-- Shows badge with unread count
-- Replace the static bell in `DashboardShell` header
+3. **Notify doctor on dispense** (replace existing function)
+   - Include pharmacist's `full_name` in body; notify doctor (currently only patient).
 
-### 4. Profile page
-New `src/routes/settings.profile.tsx` (or enhance existing `settings.tsx`):
-- Avatar upload with preview
-- On new upload: upload to `avatars/{uid}/{timestamp}.{ext}`, update `profiles.avatar_url`, then delete previous file from storage
-- Form to edit `full_name`, `phone`
-- Uses `useAuth().refreshProfile()` after save
+## Frontend changes
 
-### 5. Notifications enable realtime
-Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;` and `ALTER TABLE public.notifications REPLICA IDENTITY FULL;`
+1. **Doctor `/doctor/prescriptions`** — add timestamp column, status badge (issued/verified/dispensed), pharmacist name when dispensed. Real-time subscribe to `prescriptions` for own `doctor_id`.
 
-### Files to create/edit
-- `supabase/migrations/<new>.sql` — avatars bucket + storage policies + realtime publication
-- `src/components/medi/RoleSidebar.tsx` — refactor to permissions map
-- `src/components/medi/NotificationBell.tsx` — new
-- `src/components/medi/DashboardShell.tsx` — use NotificationBell
-- `src/routes/settings.tsx` — profile editor + avatar upload/delete
+2. **Doctor dashboard** — "Request medicine" panel posting to `medicine_requests`.
 
-No changes to auth flow, admin verification, or existing role logic.
+3. **Pharmacy `/pharmacy/scan`** — after scan, show doctor name + credentials (role), prescribed items, stock check vs. `pharmacy_availability`, and two buttons: "Verify" (status=verified) and "Mark distributed" (status=dispensed).
+
+4. **Pharmacy `/pharmacy/requests`** (new route) — list open `medicine_requests`, mark fulfilled.
+
+5. **Patient `/patient/find-pharmacy`** (new route) — for each prescription item, list pharmacies with that medicine in stock (join `pharmacy_availability.medicines` with `pharmacy_medicines` by name match against rx items).
+
+6. **Patient reminders** — `DoseReminder` already polls `medications`. Since dispense trigger inserts medications with default `schedule_times`, reminders auto-start. Add a small toast on the dispensed notification.
+
+7. **Real-time** — enable realtime publication for `prescriptions` and `medicine_requests`; subscribe in doctor + pharmacy pages.
+
+## Status flow
+`issued` (doctor creates) → `verified` (pharmacist scans & confirms stock) → `dispensed` (handed to patient → triggers medications + doctor notification + patient reminder activation).
+
+## Files
+- New migration
+- New: `src/routes/pharmacy.requests.tsx`, `src/routes/patient.find-pharmacy.tsx`
+- Edit: `src/routes/doctor.prescriptions.tsx`, `src/routes/doctor.tsx` (request medicine panel), `src/routes/pharmacy.scan.tsx`, `src/components/medi/RoleSidebar.tsx` (add new nav items)

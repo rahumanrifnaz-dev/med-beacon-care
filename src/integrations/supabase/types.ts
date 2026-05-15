@@ -103,6 +103,42 @@ export type Database = {
         }
         Relationships: []
       }
+      medicine_requests: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          dosage: string | null
+          fulfilled_at: string | null
+          fulfilled_by: string | null
+          id: string
+          medicine_name: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          dosage?: string | null
+          fulfilled_at?: string | null
+          fulfilled_by?: string | null
+          id?: string
+          medicine_name: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          dosage?: string | null
+          fulfilled_at?: string | null
+          fulfilled_by?: string | null
+          id?: string
+          medicine_name?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -234,6 +270,8 @@ export type Database = {
           pharmacist_id: string | null
           qr_token: string
           status: Database["public"]["Enums"]["prescription_status"]
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           created_at?: string
@@ -246,6 +284,8 @@ export type Database = {
           pharmacist_id?: string | null
           qr_token?: string
           status?: Database["public"]["Enums"]["prescription_status"]
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           created_at?: string
@@ -258,6 +298,8 @@ export type Database = {
           pharmacist_id?: string | null
           qr_token?: string
           status?: Database["public"]["Enums"]["prescription_status"]
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
