@@ -13,6 +13,8 @@ import {
   Settings,
   Bell,
   BarChart3,
+  AlertCircle,
+  MapPin,
 } from "lucide-react";
 
 /**
@@ -36,6 +38,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "Prescriptions", to: "/patient/prescriptions", icon: Pill, roles: ["patient"] },
   { label: "Adherence", to: "/patient/adherence", icon: BarChart3, roles: ["patient"] },
   { label: "Scan QR", to: "/patient/scan-qr", icon: QrCode, roles: ["patient"] },
+  { label: "Find pharmacy", to: "/patient/find-pharmacy", icon: MapPin, roles: ["patient"] },
 
   // Doctor
   { label: "My Patients", to: "/doctor/patients", icon: Users, roles: ["doctor"] },
@@ -46,6 +49,8 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "Manage Medicines", to: "/pharmacy/medicines", icon: Package, roles: ["pharmacist"] },
   { label: "Prescriptions", to: "/pharmacy/prescriptions", icon: FileText, roles: ["pharmacist"] },
   { label: "Stock", to: "/pharmacy/stock", icon: BarChart3, roles: ["pharmacist"] },
+  { label: "Medicine requests", to: "/pharmacy/requests", icon: AlertCircle, roles: ["pharmacist"] },
+  { label: "Scan QR", to: "/pharmacy/scan", icon: QrCode, roles: ["pharmacist"] },
 
   // Admin
   { label: "Users", to: "/admin/users", icon: Users, roles: ["admin"] },
